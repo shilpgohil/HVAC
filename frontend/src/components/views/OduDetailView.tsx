@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
-import { Snowflake, Activity, Zap, Gauge, Fan } from 'lucide-react';
+import React, { useState } from 'react';
+import { Snowflake, Activity, Zap, Gauge, Fan, Power } from 'lucide-react';
 import { SystemState } from '@/types/hvac';
+import { toggleOduState } from '@/lib/api';
 
 interface OduDetailViewProps {
   systemState: SystemState | null;
 }
 
 export function OduDetailView({ systemState }: OduDetailViewProps) {
+  const [localStates, setLocalStates] = useState<Record<string, 'ON' | 'OFF'>>({});
+
   const units = systemState?.odu_summary?.units || [
     { id: 'odu-1', name: 'ODU-01', state: 'ON' as const, power_kw: 6.8, fan_rpm: 850, temp_c: 18.2, circuit: 1, pressure_mpa: 2.85 },
     { id: 'odu-2', name: 'ODU-02', state: 'ON' as const, power_kw: 7.1, fan_rpm: 870, temp_c: 18.5, circuit: 2, pressure_mpa: 2.90 },
@@ -18,13 +21,32 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
     { id: 'odu-6', name: 'ODU-06', state: 'ON' as const, power_kw: 6.9, fan_rpm: 860, temp_c: 18.3, circuit: 6, pressure_mpa: 2.88 }
   ];
 
-  const runningCount = units.filter(u => u.state === 'ON').length;
-  const totalPower = units.reduce((acc, u) => acc + (u.state === 'ON' ? u.power_kw : 0), 0);
+  const runningCount = units.filter(u => (localStates[u.id] ?? u.state) === 'ON').length;
+  const totalPower = units.reduce((acc, u) => acc + ((localStates[u.id] ?? u.state) === 'ON' ? u.power_kw : 0), 0);
+
+  const handleToggle = async (id: string, current: 'ON' | 'OFF') => {
+    const next = current === 'ON' ? 'OFF' : 'ON';
+    setLocalStates(prev => ({ ...prev, [id]: next }));
+    try {
+      await toggleOduState(id, next);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAll = async (target: 'ON' | 'OFF') => {
+    const updates: Record<string, 'ON' | 'OFF'> = {};
+    units.forEach(u => { updates[u.id] = target; });
+    setLocalStates(prev => ({ ...prev, ...updates }));
+    for (const u of units) {
+      toggleOduState(u.id, target).catch(() => {});
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* 1. Header with System Overview (Read-Only) */}
-      <div className="rounded-2xl p-6 bg-white border border-slate-300 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.06)] border-l-4 border-l-sky-500 flex flex-wrap items-center justify-between gap-4">
+      {/* 1. Header with System Overview & Batch Controls */}
+      <div className="rounded-2xl p-6 bg-white border border-slate-300 shadow-xs border-l-4 border-l-sky-500 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <div className="w-13 h-13 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shrink-0 shadow-xs">
             <Snowflake className="w-7 h-7 text-sky-600" />
@@ -42,18 +64,36 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
           </div>
         </div>
 
-        {/* Global Summary Badge */}
-        <div className="p-3.5 px-6 rounded-xl bg-sky-50 border border-sky-200 text-right">
-          <span className="text-slate-600 text-[11px] font-semibold uppercase tracking-wider">Combined DX Power</span>
-          <div className="text-2xl font-bold font-mono-numbers text-sky-800 mt-0.5">
-            {totalPower.toFixed(1)} <span className="text-xs font-medium text-slate-500">kW</span>
+        {/* Batch Actions & Global Summary */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              onClick={() => handleAll('ON')}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition-all cursor-pointer shadow-2xs active:scale-95 flex items-center space-x-1"
+            >
+              <Power className="w-3 h-3" />
+              <span>All ON</span>
+            </button>
+            <button
+              onClick={() => handleAll('OFF')}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-200 text-slate-700 border border-slate-300 transition-all cursor-pointer shadow-2xs active:scale-95"
+            >
+              All OFF
+            </button>
+          </div>
+
+          <div className="p-2.5 px-4 rounded-xl bg-sky-50 border border-sky-200 text-right">
+            <span className="text-slate-600 text-[10px] font-semibold uppercase tracking-wider">Active Power</span>
+            <div className="text-lg font-bold font-mono-numbers text-sky-800">
+              {totalPower.toFixed(1)} <span className="text-xs font-medium text-slate-500">kW</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* 2. Top Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.05)] border-l-4 border-l-sky-500">
+        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-l-4 border-l-sky-500">
           <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
             <span>Active Compressors</span>
             <Snowflake className="w-4 h-4 text-sky-600" />
@@ -66,7 +106,7 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.05)] border-l-4 border-l-blue-500">
+        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-l-4 border-l-blue-500">
           <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
             <span>Total Electric Power</span>
             <Zap className="w-4 h-4 text-blue-600" />
@@ -79,7 +119,7 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.05)] border-l-4 border-l-amber-500">
+        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-l-4 border-l-amber-500">
           <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
             <span>Refrigerant Pressure</span>
             <Gauge className="w-4 h-4 text-amber-600" />
@@ -92,31 +132,32 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.05)] border-l-4 border-l-emerald-500">
+        <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-l-4 border-l-emerald-500">
           <div className="flex items-center justify-between text-slate-600 text-xs font-semibold uppercase tracking-wider">
             <span>COP Efficiency</span>
             <Activity className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-bold font-mono-numbers text-emerald-800 mt-1.5">
-            4.12
+            4.28 <span className="text-sm font-medium text-slate-500">COP</span>
           </div>
           <div className="text-[11px] text-slate-600 mt-2 font-mono-numbers font-medium">
-            Inverter Scroll Class A+++
+            Part-load high efficiency envelope
           </div>
         </div>
       </div>
 
-      {/* 3. Dedicated 6 ODU Matrix (Read-Only) */}
+      {/* 3. 6 Individual ODU Inverter Cards with Interactive ON/OFF Switches */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {units.map((unit, idx) => {
-          const isOn = unit.state === 'ON';
+          const effectiveState = localStates[unit.id] ?? unit.state;
+          const isOn = effectiveState === 'ON';
           return (
             <div 
               key={unit.id}
-              className={`rounded-2xl p-5 border transition-all duration-200 bg-white shadow-[0_2px_12px_-2px_rgba(15,23,42,0.05)] ${
+              className={`rounded-2xl p-5 border transition-all duration-200 bg-white shadow-xs ${
                 isOn 
                   ? 'border-slate-300 border-t-4 border-t-sky-500 hover:border-sky-400' 
-                  : 'border-slate-200 bg-slate-50 opacity-60'
+                  : 'border-slate-200 bg-slate-50 opacity-70'
               }`}
             >
               <div className="flex items-center justify-between pb-3 border-b border-slate-200">
@@ -130,28 +171,31 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
                   </div>
                 </div>
 
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono-numbers uppercase font-bold flex items-center space-x-1 ${
-                  isOn 
-                    ? 'bg-sky-100 text-sky-900 border border-sky-300' 
-                    : 'bg-slate-200 text-slate-700 border border-slate-300'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full mr-1 ${isOn ? 'bg-sky-600 animate-pulse' : 'bg-slate-400'}`} />
-                  {isOn ? 'Operating' : 'Standby'}
-                </span>
+                <button
+                  onClick={() => handleToggle(unit.id, effectiveState)}
+                  className={`px-3 py-1 rounded-full text-[10px] font-mono-numbers uppercase font-bold flex items-center space-x-1.5 transition-all duration-200 cursor-pointer shadow-xs active:scale-95 ${
+                    isOn 
+                      ? 'bg-sky-600 hover:bg-sky-700 text-white' 
+                      : 'bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300'
+                  }`}
+                >
+                  <Power className="w-2.5 h-2.5" />
+                  <span>{isOn ? 'Operating' : 'Standby'}</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-3.5 text-xs">
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-slate-600 text-[10px] font-semibold uppercase tracking-wider">Power Load</span>
                   <div className="text-base font-bold font-mono-numbers text-slate-900 mt-1">
-                    {unit.power_kw} <span className="text-xs font-normal text-slate-500">kW</span>
+                    {isOn ? unit.power_kw : 0.0} <span className="text-xs font-normal text-slate-500">kW</span>
                   </div>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="text-slate-600 text-[10px] font-semibold uppercase tracking-wider">Fan RPM</span>
                   <div className="text-base font-bold font-mono-numbers text-sky-800 mt-1">
-                    {unit.fan_rpm} <span className="text-xs font-normal text-slate-500">RPM</span>
+                    {isOn ? unit.fan_rpm : 0} <span className="text-xs font-normal text-slate-500">RPM</span>
                   </div>
                 </div>
 

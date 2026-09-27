@@ -7,10 +7,11 @@ import {
   Search, 
   Command, 
   Zap, 
-  Snowflake,
-  Sun,
-  Activity,
-  CheckCircle2
+  Snowflake, 
+  Sun, 
+  Activity, 
+  CheckCircle2,
+  Menu
 } from 'lucide-react';
 
 export type SystemMode = 'hvac' | 'electrical';
@@ -19,12 +20,14 @@ interface TopHeaderProps {
   activeSystem: SystemMode;
   onSelectSystem: (mode: SystemMode) => void;
   alarmCount?: number;
+  onToggleMobileSidebar?: () => void;
 }
 
 export function TopHeader({ 
   activeSystem, 
   onSelectSystem, 
-  alarmCount = 1 
+  alarmCount = 1,
+  onToggleMobileSidebar
 }: TopHeaderProps) {
   const [timeStr, setTimeStr] = useState<string>('27 Sep 2026, 21:45');
 
@@ -48,9 +51,18 @@ export function TopHeader({
   }, []);
 
   return (
-    <header className="h-16 px-6 bg-white/90 border-b border-slate-200/80 flex items-center justify-between sticky top-0 z-30 shadow-[0_2px_10px_rgba(15,23,42,0.03)] backdrop-blur-md">
-      {/* 1. Left: Search Bar with ⌘K Badge (Light Mode) */}
-      <div className="flex items-center space-x-4">
+    <header className="h-16 px-4 md:px-6 bg-white/95 border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-xs backdrop-blur-md">
+      {/* 1. Left: Hamburger on Mobile + Search Bar with ⌘K Badge */}
+      <div className="flex items-center space-x-2 md:space-x-4">
+        {onToggleMobileSidebar && (
+          <button
+            onClick={onToggleMobileSidebar}
+            className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
+            aria-label="Toggle navigation drawer"
+          >
+            <Menu className="w-5 h-5 text-slate-700" />
+          </button>
+        )}
         <div className="relative flex items-center">
           <div className="flex items-center space-x-2 bg-slate-100/90 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-xl w-60 md:w-72 transition-all text-xs text-slate-500 group">
             <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors" />

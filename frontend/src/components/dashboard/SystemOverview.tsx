@@ -14,8 +14,12 @@ import {
   Eye,
   Sliders,
   Zap,
-  Gauge
+  Gauge,
+  Power,
+  RefreshCw,
+  ShieldAlert
 } from 'lucide-react';
+import { toggleAhuState, toggleOduState, toggleHeaterState } from '@/lib/api';
 
 interface SystemOverviewProps {
   systemState: SystemState | null;
@@ -25,9 +29,15 @@ interface SystemOverviewProps {
 }
 
 export function SystemOverview({
-  systemState
+  systemState,
+  onToggleAhu,
+  onToggleOdu,
+  onToggleHeater
 }: SystemOverviewProps) {
   const [viewMode, setViewMode] = useState<'connected' | 'schematic'>('connected');
+  const [localAhuState, setLocalAhuState] = useState<'ON' | 'OFF' | null>(null);
+  const [localOduStates, setLocalOduStates] = useState<Record<string, 'ON' | 'OFF'>>({});
+  const [localHeaterBankState, setLocalHeaterBankState] = useState<'ON' | 'OFF' | null>(null);
   const [hoveredComponent, setHoveredComponent] = useState<{
     id: string;
     title: string;
@@ -37,9 +47,77 @@ export function SystemOverview({
     type: 'ahu' | 'odu' | 'heater' | 'filter' | 'coil' | 'fan' | 'room';
   } | null>(null);
   
-  const ahuOnline = systemState?.ahu?.state === 'ON';
+  const rawAhuOnline = systemState?.ahu?.state === 'ON';
+  const ahuOnline = localAhuState !== null ? localAhuState === 'ON' : rawAhuOnline;
+
   const odus = systemState?.odu_summary?.units ?? [];
-  const anyHeaterRunning = (systemState?.heater_summary?.running ?? 0) > 0;
+  const rawAnyHeaterRunning = (systemState?.heater_summary?.running ?? 0) > 0;
+  const anyHeaterRunning = localHeaterBankState !== null ? localHeaterBankState === 'ON' : rawAnyHeaterRunning;
+
+  const handleToggleAhu = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextState = ahuOnline ? 'OFF' : 'ON';
+    setLocalAhuState(nextState);
+    if (onToggleAhu) onToggleAhu(nextState);
+    try {
+      await toggleAhuState(nextState);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleOdu = async (oduId: string, current: 'ON' | 'OFF', e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const effective = localOduStates[oduId] ?? current;
+    const nextState = effective === 'ON' ? 'OFF' : 'ON';
+    setLocalOduStates(prev => ({ ...prev, [oduId]: nextState }));
+    if (onToggleOdu) onToggleOdu(oduId, nextState);
+    try {
+      await toggleOduState(oduId, nextState);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleHeaterBank = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextState = anyHeaterRunning ? 'OFF' : 'ON';
+    setLocalHeaterBankState(nextState);
+    for (let i = 1; i <= 8; i++) {
+      const id = `HTR-0${i}`;
+      toggleHeaterState(id, nextState).catch(() => {});
+    }
+  };
+
+  const handleAllSystemsOn = async () => {
+    setLocalAhuState('ON');
+    toggleAhuState('ON').catch(() => {});
+    const oduUpdates: Record<string, 'ON' | 'OFF'> = {};
+    odus.forEach(o => {
+      oduUpdates[o.id] = 'ON';
+      toggleOduState(o.id, 'ON').catch(() => {});
+    });
+    setLocalOduStates(prev => ({ ...prev, ...oduUpdates }));
+    setLocalHeaterBankState('ON');
+    for (let i = 1; i <= 8; i++) {
+      toggleHeaterState(`HTR-0${i}`, 'ON').catch(() => {});
+    }
+  };
+
+  const handleSafeStandby = async () => {
+    setLocalAhuState('OFF');
+    toggleAhuState('OFF').catch(() => {});
+    const oduUpdates: Record<string, 'ON' | 'OFF'> = {};
+    odus.forEach(o => {
+      oduUpdates[o.id] = 'OFF';
+      toggleOduState(o.id, 'OFF').catch(() => {});
+    });
+    setLocalOduStates(prev => ({ ...prev, ...oduUpdates }));
+    setLocalHeaterBankState('OFF');
+    for (let i = 1; i <= 8; i++) {
+      toggleHeaterState(`HTR-0${i}`, 'OFF').catch(() => {});
+    }
+  };
 
   return (
     <div className="rounded-3xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(15,23,42,0.06)] border border-slate-300 bg-white transition-all duration-300">
@@ -112,174 +190,221 @@ export function SystemOverview({
         )}
 
         {viewMode === 'connected' ? (
-          /* View 1: Interconnected Flow Sequence (High Contrast Light Mode) */
-          <div className="w-full overflow-x-auto pb-2 p-3 rounded-2xl bg-white border border-slate-300 shadow-xs scrollbar-thin scrollbar-thumb-slate-300">
-            <div className="flex items-center justify-between min-w-[840px] px-2 py-3">
-              {/* AHU-01 Card */}
-              <div 
-                className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-105"
-                onMouseEnter={() => setHoveredComponent({
-                  id: 'AHU-01',
-                  title: 'Air Handling Unit AHU-01',
-                  subtitle: 'Primary Cleanroom Conditioned Air',
-                  status: ahuOnline ? 'ON' : 'OFF',
-                  type: 'ahu',
-                  metrics: [
-                    { label: 'Airflow Volume', value: ahuOnline ? '14,500' : '0', unit: 'CFM' },
-                    { label: 'Supply Fan VFD', value: ahuOnline ? '50.0' : '0.0', unit: 'Hz' },
-                    { label: 'Filter Differential', value: ahuOnline ? '120' : '5', unit: 'Pa (Clean)' }
-                  ]
-                })}
-                onMouseLeave={() => setHoveredComponent(null)}
-              >
-                <span className="text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">AHU</span>
-                <div className="w-26 h-26 rounded-2xl p-2.5 flex flex-col items-center justify-between shadow-xs transition-all duration-300 border-2 bg-emerald-50/30 border-emerald-400 text-slate-900">
-                  <div className="w-full flex justify-between items-center text-[9px] text-slate-600 font-mono-numbers">
-                    <span>CFM</span>
-                    <span className="text-emerald-800 font-bold">{ahuOnline ? '8.45k' : '0'}</span>
-                  </div>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+          /* View 1: Interconnected Flow Sequence with Full Interactive Controls */
+          <div className="w-full space-y-3">
+            {/* Quick Supervisory Control Toolbar */}
+            <div className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 shadow-2xs flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center space-x-2 text-xs font-bold text-slate-800">
+                <Sliders className="w-3.5 h-3.5 text-sky-600" />
+                <span>Direct Supervisory Controls</span>
+                <span className="text-[10px] font-normal text-slate-500 hidden sm:inline">(Tap any unit or toggle button to switch ON/OFF)</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleAllSystemsOn}
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer flex items-center space-x-1 shadow-xs active:scale-95"
+                >
+                  <Power className="w-3 h-3" />
+                  <span>All Systems Active</span>
+                </button>
+                <button
+                  onClick={handleSafeStandby}
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center space-x-1 active:scale-95"
+                >
+                  <ShieldAlert className="w-3 h-3 text-amber-600" />
+                  <span>Safe Standby</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="w-full overflow-x-auto pb-2 p-3 rounded-2xl bg-white border border-slate-300 shadow-xs scrollbar-thin scrollbar-thumb-slate-300">
+              <div className="flex items-center justify-between min-w-[840px] px-2 py-3">
+                {/* AHU-01 Card (Interactive Toggle) */}
+                <div 
+                  className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-105 cursor-pointer"
+                  onClick={handleToggleAhu}
+                  onMouseEnter={() => setHoveredComponent({
+                    id: 'AHU-01',
+                    title: 'Air Handling Unit AHU-01',
+                    subtitle: 'Primary Cleanroom Conditioned Air · Click to Toggle',
+                    status: ahuOnline ? 'ON' : 'OFF',
+                    type: 'ahu',
+                    metrics: [
+                      { label: 'Airflow Volume', value: ahuOnline ? '14,500' : '0', unit: 'CFM' },
+                      { label: 'Supply Fan VFD', value: ahuOnline ? '50.0' : '0.0', unit: 'Hz' },
+                      { label: 'Filter Differential', value: ahuOnline ? '120' : '5', unit: 'Pa (Clean)' }
+                    ]
+                  })}
+                  onMouseLeave={() => setHoveredComponent(null)}
+                >
+                  <span className="text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">AHU</span>
+                  <div className={`w-26 h-26 rounded-2xl p-2.5 flex flex-col items-center justify-between shadow-xs transition-all duration-300 border-2 ${
                     ahuOnline 
-                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700 shadow-xs'
-                      : 'bg-slate-100 border-slate-300 text-slate-400'
+                      ? 'bg-emerald-50/40 border-emerald-500 text-slate-900 shadow-emerald-100' 
+                      : 'bg-slate-100 border-slate-300 text-slate-500'
                   }`}>
-                    <Fan className={`w-5 h-5 ${ahuOnline ? 'animate-fan' : ''}`} />
-                  </div>
-                  <div className="text-[11px] font-bold text-slate-900 font-mono-numbers">AHU-01</div>
-                </div>
-                <div className={`mt-2.5 px-2.5 py-0.5 rounded text-[10px] font-mono-numbers font-bold uppercase tracking-wider ${
-                  ahuOnline
-                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                    : 'bg-slate-200 text-slate-600 border border-slate-300'
-                }`}>
-                  {ahuOnline ? 'RUNNING' : 'STANDBY'}
-                </div>
-              </div>
-
-              {/* Connecting pipe from AHU to ODU-1 */}
-              <div className="flex-1 min-w-4 max-w-8 h-2 bg-slate-200 relative overflow-hidden self-center mx-1 rounded-full border border-slate-300">
-                {ahuOnline && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-sky-500 animate-pulse" />
-                )}
-              </div>
-
-              {/* 6 Outdoor Units */}
-              {odus.map((odu, index) => {
-                const isOn = odu.state === 'ON';
-                return (
-                  <React.Fragment key={odu.id}>
-                    <div 
-                      className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-108"
-                      onMouseEnter={() => setHoveredComponent({
-                        id: odu.id,
-                        title: `Outdoor Unit ${odu.name}`,
-                        subtitle: `Refrigerant Circuit ${(index % 3) + 1}`,
-                        status: isOn ? 'ON' : 'OFF',
-                        type: 'odu',
-                        metrics: [
-                          { label: 'Power Draw', value: `${odu.power_kw}`, unit: 'kW' },
-                          { label: 'Fan Rotation', value: `${odu.fan_rpm}`, unit: 'RPM' },
-                          { label: 'Condenser Coil Temp', value: `${odu.temp_c}`, unit: '°C' }
-                        ]
-                      })}
-                      onMouseLeave={() => setHoveredComponent(null)}
-                    >
-                      <span className="text-[10px] font-bold text-slate-700 mb-2 uppercase tracking-wider">{odu.name}</span>
-                      <div 
-                        className={`w-20 h-26 rounded-2xl p-2 flex flex-col items-center justify-between transition-all duration-300 border-2 shadow-xs ${
-                          isOn 
-                            ? 'border-sky-400 bg-sky-50/40 text-slate-900' 
-                            : 'border-slate-300 bg-slate-100 opacity-60 text-slate-500'
-                        }`}
-                      >
-                        <div className="w-full flex justify-between text-[8px] font-mono-numbers text-slate-600 font-semibold">
-                          <span>ODU</span>
-                          <span className={isOn ? 'text-sky-800 font-bold' : 'text-slate-500'}>{isOn ? 'ACT' : 'STB'}</span>
-                        </div>
-                        
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${
-                          isOn 
-                            ? 'bg-sky-100 border-sky-300 text-sky-700 shadow-xs' 
-                            : 'bg-slate-200 border-slate-300 text-slate-400'
-                        }`}>
-                          <Fan className={`w-5 h-5 ${isOn ? 'animate-fan' : ''}`} />
-                        </div>
-
-                        <div className="text-[10px] font-mono-numbers text-slate-900 font-bold truncate">
-                          {isOn ? `${odu.power_kw}kW` : '0 kW'}
-                        </div>
-                      </div>
-
-                      <div className={`mt-2.5 px-2 py-0.5 rounded text-[10px] font-mono-numbers font-bold uppercase tracking-wider ${
-                        isOn
-                          ? 'bg-sky-100 text-sky-900 border border-sky-300'
-                          : 'bg-slate-200 text-slate-600 border border-slate-300'
-                      }`}>
-                        {isOn ? 'RUN' : 'OFF'}
-                      </div>
+                    <div className="w-full flex justify-between items-center text-[9px] text-slate-600 font-mono-numbers">
+                      <span>CFM</span>
+                      <span className="text-emerald-800 font-bold">{ahuOnline ? '8.45k' : '0'}</span>
                     </div>
-
-                    {/* Pipe between units */}
-                    {index < odus.length - 1 && (
-                      <div className="flex-1 min-w-3 max-w-6 h-2 bg-slate-200 relative overflow-hidden self-center mx-0.5 rounded-full border border-slate-300">
-                        {isOn && (
-                          <div className="absolute inset-0 bg-sky-500 animate-pulse" />
-                        )}
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-
-              {/* Connecting pipe from ODU-6 to Heater Bank */}
-              <div className="flex-1 min-w-4 max-w-8 h-2 bg-slate-200 relative overflow-hidden self-center mx-1 rounded-full border border-slate-300">
-                {anyHeaterRunning && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-amber-500 animate-pulse" />
-                )}
-              </div>
-
-              {/* Heater Bank Card */}
-              <div 
-                className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-105"
-                onMouseEnter={() => setHoveredComponent({
-                  id: 'HTR-BANK',
-                  title: 'Electric Heating Stage Bank',
-                  subtitle: '8-Unit Modulating Thermal Elements',
-                  status: anyHeaterRunning ? 'ON' : 'OFF',
-                  type: 'heater',
-                  metrics: [
-                    { label: 'Active Stages', value: `${systemState?.heater_summary?.running ?? 8}/8`, unit: '' },
-                    { label: 'Total Heat Duty', value: `${((systemState?.heater_summary?.running ?? 8) * 3.0).toFixed(1)}`, unit: 'kW' },
-                    { label: 'Average Core Temp', value: '52.5', unit: '°C' }
-                  ]
-                })}
-                onMouseLeave={() => setHoveredComponent(null)}
-              >
-                <span className="text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">Heater Bank</span>
-                <div className={`w-26 h-26 rounded-2xl p-2.5 flex flex-col items-center justify-between shadow-xs transition-all duration-300 border-2 ${
-                  anyHeaterRunning 
-                    ? 'border-amber-400 bg-amber-50/40 text-slate-900' 
-                    : 'border-slate-300 bg-slate-100 opacity-60 text-slate-500'
-                }`}>
-                  <div className="w-full flex justify-between items-center text-[9px] text-slate-600 font-mono-numbers">
-                    <span>STAGES</span>
-                    <span className="text-amber-800 font-bold">{systemState?.heater_summary?.running ?? 8}/8</span>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                      ahuOnline 
+                        ? 'bg-emerald-100 border-emerald-300 text-emerald-700 shadow-xs'
+                        : 'bg-slate-200 border-slate-300 text-slate-400'
+                    }`}>
+                      <Fan className={`w-5 h-5 ${ahuOnline ? 'animate-fan' : ''}`} />
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-900 font-mono-numbers">AHU-01</div>
                   </div>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
-                    anyHeaterRunning 
-                      ? 'bg-amber-100 border-amber-300 text-amber-700 shadow-xs'
-                      : 'bg-slate-200 border-slate-300 text-slate-400'
-                  }`}>
-                    <Flame className={`w-5 h-5 ${anyHeaterRunning ? 'animate-pulse' : ''}`} />
-                  </div>
-                  <div className="text-[11px] font-bold text-slate-900 font-mono-numbers">8-STAGE REHEAT</div>
+                  <button
+                    onClick={handleToggleAhu}
+                    className={`mt-2.5 px-3 py-1 rounded-full text-[10px] font-mono-numbers font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs flex items-center space-x-1.5 active:scale-95 ${
+                      ahuOnline
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300'
+                    }`}
+                  >
+                    <Power className="w-2.5 h-2.5" />
+                    <span>{ahuOnline ? 'RUNNING' : 'STANDBY'}</span>
+                  </button>
                 </div>
-                <div className={`mt-2.5 px-2.5 py-0.5 rounded text-[10px] font-mono-numbers font-bold uppercase tracking-wider ${
-                  anyHeaterRunning
-                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                    : 'bg-slate-200 text-slate-600 border border-slate-300'
-                }`}>
-                  {anyHeaterRunning ? 'ENERGIZED' : 'STANDBY'}
+
+                {/* Connecting pipe from AHU to ODU-1 */}
+                <div className="flex-1 min-w-4 max-w-8 h-2 bg-slate-200 relative overflow-hidden self-center mx-1 rounded-full border border-slate-300">
+                  {ahuOnline && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-sky-500 animate-pulse" />
+                  )}
+                </div>
+
+                {/* 6 Outdoor Units (Interactive Toggles) */}
+                {odus.map((odu, index) => {
+                  const effectiveState = localOduStates[odu.id] ?? odu.state;
+                  const isOn = effectiveState === 'ON';
+                  return (
+                    <React.Fragment key={odu.id}>
+                      <div 
+                        className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-108 cursor-pointer"
+                        onClick={(e) => handleToggleOdu(odu.id, odu.state, e)}
+                        onMouseEnter={() => setHoveredComponent({
+                          id: odu.id,
+                          title: `Outdoor Unit ${odu.name}`,
+                          subtitle: `Refrigerant Circuit ${(index % 3) + 1} · Click to Toggle`,
+                          status: isOn ? 'ON' : 'OFF',
+                          type: 'odu',
+                          metrics: [
+                            { label: 'Power Draw', value: `${isOn ? odu.power_kw : 0.0}`, unit: 'kW' },
+                            { label: 'Fan Rotation', value: `${isOn ? odu.fan_rpm : 0}`, unit: 'RPM' },
+                            { label: 'Condenser Coil Temp', value: `${odu.temp_c}`, unit: '°C' }
+                          ]
+                        })}
+                        onMouseLeave={() => setHoveredComponent(null)}
+                      >
+                        <span className="text-[10px] font-bold text-slate-700 mb-2 uppercase tracking-wider">{odu.name}</span>
+                        <div 
+                          className={`w-20 h-26 rounded-2xl p-2 flex flex-col items-center justify-between transition-all duration-300 border-2 shadow-xs ${
+                            isOn 
+                              ? 'border-sky-500 bg-sky-50/40 text-slate-900 shadow-sky-100' 
+                              : 'border-slate-300 bg-slate-100 opacity-60 text-slate-500'
+                          }`}
+                        >
+                          <div className="w-full flex justify-between text-[8px] font-mono-numbers text-slate-600 font-semibold">
+                            <span>ODU</span>
+                            <span className={isOn ? 'text-sky-800 font-bold' : 'text-slate-500'}>{isOn ? 'ACT' : 'STB'}</span>
+                          </div>
+                          
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${
+                            isOn 
+                              ? 'bg-sky-100 border-sky-300 text-sky-700 shadow-xs' 
+                              : 'bg-slate-200 border-slate-300 text-slate-400'
+                          }`}>
+                            <Fan className={`w-5 h-5 ${isOn ? 'animate-fan' : ''}`} />
+                          </div>
+
+                          <div className="text-[10px] font-mono-numbers text-slate-900 font-bold truncate">
+                            {isOn ? `${odu.power_kw}kW` : '0 kW'}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={(e) => handleToggleOdu(odu.id, odu.state, e)}
+                          className={`mt-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-numbers font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-2xs flex items-center space-x-1 active:scale-95 ${
+                            isOn
+                              ? 'bg-sky-600 hover:bg-sky-700 text-white'
+                              : 'bg-slate-200 hover:bg-slate-300 text-slate-600 border border-slate-300'
+                          }`}
+                        >
+                          <Power className="w-2 h-2" />
+                          <span>{isOn ? 'RUN' : 'OFF'}</span>
+                        </button>
+                      </div>
+
+                      {/* Pipe between units */}
+                      {index < odus.length - 1 && (
+                        <div className="flex-1 min-w-3 max-w-6 h-2 bg-slate-200 relative overflow-hidden self-center mx-0.5 rounded-full border border-slate-300">
+                          {isOn && (
+                            <div className="absolute inset-0 bg-sky-500 animate-pulse" />
+                          )}
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+
+                {/* Connecting pipe from ODU-6 to Heater Bank */}
+                <div className="flex-1 min-w-4 max-w-8 h-2 bg-slate-200 relative overflow-hidden self-center mx-1 rounded-full border border-slate-300">
+                  {anyHeaterRunning && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-amber-500 animate-pulse" />
+                  )}
+                </div>
+
+                {/* Heater Bank Card (Interactive Toggle) */}
+                <div 
+                  className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-105 cursor-pointer"
+                  onClick={handleToggleHeaterBank}
+                  onMouseEnter={() => setHoveredComponent({
+                    id: 'HTR-BANK',
+                    title: 'Electric Heating Stage Bank',
+                    subtitle: '8-Unit Modulating Thermal Elements · Click to Toggle',
+                    status: anyHeaterRunning ? 'ON' : 'OFF',
+                    type: 'heater',
+                    metrics: [
+                      { label: 'Active Stages', value: `${anyHeaterRunning ? (systemState?.heater_summary?.running ?? 8) : 0}/8`, unit: '' },
+                      { label: 'Total Heat Duty', value: `${anyHeaterRunning ? (((systemState?.heater_summary?.running ?? 8) * 3.0).toFixed(1)) : '0.0'}`, unit: 'kW' },
+                      { label: 'Average Core Temp', value: anyHeaterRunning ? '52.5' : '24.0', unit: '°C' }
+                    ]
+                  })}
+                  onMouseLeave={() => setHoveredComponent(null)}
+                >
+                  <span className="text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">Heater Bank</span>
+                  <div className={`w-26 h-26 rounded-2xl p-2.5 flex flex-col items-center justify-between shadow-xs transition-all duration-300 border-2 ${
+                    anyHeaterRunning 
+                      ? 'border-amber-500 bg-amber-50/40 text-slate-900 shadow-amber-100' 
+                      : 'border-slate-300 bg-slate-100 opacity-60 text-slate-500'
+                  }`}>
+                    <div className="w-full flex justify-between items-center text-[9px] text-slate-600 font-mono-numbers">
+                      <span>STAGES</span>
+                      <span className="text-amber-800 font-bold">{anyHeaterRunning ? `${systemState?.heater_summary?.running ?? 8}/8` : '0/8'}</span>
+                    </div>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                      anyHeaterRunning 
+                        ? 'bg-amber-100 border-amber-300 text-amber-700 shadow-xs'
+                        : 'bg-slate-200 border-slate-300 text-slate-400'
+                    }`}>
+                      <Flame className={`w-5 h-5 ${anyHeaterRunning ? 'animate-pulse' : ''}`} />
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-900 font-mono-numbers">8-STAGE REHEAT</div>
+                  </div>
+                  <button
+                    onClick={handleToggleHeaterBank}
+                    className={`mt-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-numbers font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs flex items-center space-x-1 active:scale-95 ${
+                      anyHeaterRunning
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                        : 'bg-slate-200 hover:bg-slate-300 text-slate-600 border border-slate-300'
+                    }`}
+                  >
+                    <Power className="w-2 h-2" />
+                    <span>{anyHeaterRunning ? 'ENERGIZED' : 'STANDBY'}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -315,13 +440,15 @@ export function SystemOverview({
                   const x = col * 85;
                   const y = 25 + row * 115;
                   const odu = odus[idx];
-                  const isOn = odu?.state === 'ON';
+                  const effectiveState = localOduStates[odu?.id ?? `ODU-0${idx + 1}`] ?? (odu?.state ?? 'OFF');
+                  const isOn = effectiveState === 'ON';
 
                   return (
                     <g 
                       key={idx} 
                       transform={`translate(${x}, ${y})`}
-                      className="transition-transform duration-300 hover:scale-105"
+                      className="transition-transform duration-300 hover:scale-105 cursor-pointer"
+                      onClick={(e) => odu && handleToggleOdu(odu.id, odu.state, e)}
                       onMouseEnter={() => setHoveredComponent({
                         id: `ODU-0${idx + 1}`,
                         title: `Outdoor Condenser ODU-${idx + 1}`,
@@ -464,17 +591,18 @@ export function SystemOverview({
                 {/* Electric Heater Bank Section */}
                 <g 
                   transform="translate(165, 45)" 
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-transform duration-200 hover:scale-102"
+                  onClick={handleToggleHeaterBank}
                   onMouseEnter={() => setHoveredComponent({
                     id: 'HEATER_BANK',
                     title: 'Electric Heating Element Bank',
-                    subtitle: '8 Staged Reheat Elements',
+                    subtitle: '8 Staged Reheat Elements · Click to Toggle',
                     status: anyHeaterRunning ? 'ON' : 'OFF',
                     type: 'heater',
                     metrics: [
-                      { label: 'Stages Active', value: `${systemState?.heater_summary?.running ?? 8}/8`, unit: '' },
-                      { label: 'Heating Duty', value: `${((systemState?.heater_summary?.running ?? 8) * 3.0).toFixed(1)}`, unit: 'kW' },
-                      { label: 'Element Temperature', value: '52.5', unit: '°C' }
+                      { label: 'Stages Active', value: `${anyHeaterRunning ? (systemState?.heater_summary?.running ?? 8) : 0}/8`, unit: '' },
+                      { label: 'Heating Duty', value: `${anyHeaterRunning ? (((systemState?.heater_summary?.running ?? 8) * 3.0).toFixed(1)) : '0.0'}`, unit: 'kW' },
+                      { label: 'Element Temperature', value: anyHeaterRunning ? '52.5' : '24.0', unit: '°C' }
                     ]
                   })}
                   onMouseLeave={() => setHoveredComponent(null)}
@@ -492,11 +620,12 @@ export function SystemOverview({
                 {/* Supply Air Centrifugal Fan */}
                 <g 
                   transform="translate(265, 45)" 
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-transform duration-200 hover:scale-102"
+                  onClick={handleToggleAhu}
                   onMouseEnter={() => setHoveredComponent({
                     id: 'SUPPLY_FAN',
                     title: 'Direct-Drive Supply Blower',
-                    subtitle: 'Centrifugal Backward-Curved Fan',
+                    subtitle: 'Centrifugal Backward-Curved Fan · Click to Toggle',
                     status: ahuOnline ? 'ON' : 'OFF',
                     type: 'fan',
                     metrics: [

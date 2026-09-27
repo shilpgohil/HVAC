@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Fan, 
   Wind, 
@@ -9,15 +9,19 @@ import {
   Zap, 
   ShieldCheck, 
   Thermometer, 
-  Layers 
+  Layers,
+  Power
 } from 'lucide-react';
 import { SystemState } from '@/types/hvac';
+import { toggleAhuState } from '@/lib/api';
 
 interface AhuDetailViewProps {
   systemState: SystemState | null;
 }
 
 export function AhuDetailView({ systemState }: AhuDetailViewProps) {
+  const [localState, setLocalState] = useState<'ON' | 'OFF' | null>(null);
+
   const ahu = systemState?.ahu || {
     id: 'ahu-1',
     name: 'Air Handling Unit 1',
@@ -36,7 +40,7 @@ export function AhuDetailView({ systemState }: AhuDetailViewProps) {
     set_point_c: 22.0
   };
 
-  const isRunning = ahu.state === 'ON';
+  const isRunning = (localState ?? ahu.state) === 'ON';
   const vfdSpeedHz = ahu.fan_vfd_hz;
   const supplyFanRpm = Math.round(vfdSpeedHz * 28.4);
 
@@ -44,10 +48,20 @@ export function AhuDetailView({ systemState }: AhuDetailViewProps) {
   const returnDamperPct = 75;
   const exhaustDamperPct = 15;
 
+  const handleToggle = async () => {
+    const next = isRunning ? 'OFF' : 'ON';
+    setLocalState(next);
+    try {
+      await toggleAhuState(next);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* 1. Header with Status (Read-Only) */}
-      <div className="rounded-2xl p-6 bg-white border border-slate-300 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.06)] border-l-4 border-l-emerald-500 flex flex-wrap items-center justify-between gap-4">
+      {/* 1. Header with Master Power Control */}
+      <div className="rounded-2xl p-6 bg-white border border-slate-300 shadow-xs border-l-4 border-l-emerald-500 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0 shadow-xs">
             <Fan className={`w-7 h-7 ${isRunning ? 'animate-fan text-emerald-600' : 'text-slate-400'}`} />
@@ -69,13 +83,19 @@ export function AhuDetailView({ systemState }: AhuDetailViewProps) {
           </div>
         </div>
 
-        {/* Read-Only Status Indicator */}
-        <div className="p-3.5 px-5 rounded-xl bg-emerald-50 border border-emerald-200 text-right">
-          <span className="text-slate-600 text-[11px] font-semibold uppercase tracking-wider">Control Authority</span>
-          <div className="text-sm font-bold font-mono-numbers text-emerald-800 mt-0.5 flex items-center justify-end space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>DDC Supervisory Lock</span>
-          </div>
+        {/* Master Power Toggle Button */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleToggle}
+            className={`px-5 py-2.5 rounded-xl font-bold font-mono-numbers text-xs uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs flex items-center space-x-2 active:scale-95 ${
+              isRunning
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200'
+                : 'bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300'
+            }`}
+          >
+            <Power className="w-4 h-4" />
+            <span>{isRunning ? 'Power: ACTIVE (ON)' : 'Power: STANDBY (OFF)'}</span>
+          </button>
         </div>
       </div>
 

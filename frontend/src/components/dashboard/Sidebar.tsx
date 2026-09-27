@@ -9,9 +9,10 @@ import {
   TrendingUp, 
   AlertTriangle, 
   Settings, 
-  Activity,
-  Zap,
-  CheckCircle2
+  Activity, 
+  Zap, 
+  CheckCircle2,
+  X
 } from 'lucide-react';
 
 export type NavTab = 'dashboard' | 'ahu' | 'odu' | 'heater' | 'graph' | 'alarms' | 'settings';
@@ -23,14 +24,18 @@ interface SidebarProps {
   activeSystem: SystemMode;
   onSelectSystem: (mode: SystemMode) => void;
   alarmCount?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function Sidebar({ 
   currentTab, 
   onSelectTab, 
-  activeSystem,
-  onSelectSystem,
-  alarmCount = 1 
+  activeSystem, 
+  onSelectSystem, 
+  alarmCount = 1,
+  isOpen = false,
+  onClose
 }: SidebarProps) {
   const hvacNavItems = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
@@ -42,30 +47,51 @@ export function Sidebar({
     { id: 'settings' as NavTab, label: 'Settings', icon: Settings }
   ];
 
-  return (
-    <aside className="w-64 bg-white/90 border-r border-slate-200/80 flex flex-col shrink-0 min-h-screen justify-between select-none z-20 backdrop-blur-md shadow-[2px_0_12px_rgba(15,23,42,0.03)]">
+  const handleItemClick = (tab: NavTab) => {
+    onSelectTab(tab);
+    if (onClose) onClose();
+  };
+
+  const handleSystemChange = (sys: SystemMode) => {
+    onSelectSystem(sys);
+    if (onClose) onClose();
+  };
+
+  const sidebarContent = (
+    <>
       <div>
         {/* Logo & Header */}
-        <div className="p-4.5 border-b border-slate-100 flex items-center space-x-3 bg-slate-50/50">
-          <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shrink-0 shadow-xs">
-            <Activity className="w-4.5 h-4.5 text-sky-600" />
-          </div>
-          <div>
-            <div className="font-bold text-slate-900 text-sm tracking-tight flex items-center space-x-1.5">
-              <span>SuperTwin SCADA</span>
+        <div className="p-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shrink-0 shadow-xs">
+              <Activity className="w-4.5 h-4.5 text-sky-600" />
             </div>
-            <div className="text-[10px] text-slate-500 font-mono-numbers">
-              Industrial Digital Twin
+            <div>
+              <div className="font-bold text-slate-900 text-sm tracking-tight flex items-center space-x-1.5">
+                <span>SuperTwin SCADA</span>
+              </div>
+              <div className="text-[10px] text-slate-500 font-mono-numbers">
+                Industrial Digital Twin
+              </div>
             </div>
           </div>
+          {onClose && (
+            <button 
+              onClick={onClose}
+              className="md:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors"
+              aria-label="Close navigation"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* System Switcher (Compact Light Mode Pill) */}
         <div className="p-3">
           <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/80 grid grid-cols-2 gap-1 text-[11px] font-medium">
             <button
-              onClick={() => onSelectSystem('hvac')}
-              className={`py-1.5 px-2 rounded-lg transition-all duration-200 flex items-center justify-center space-x-1.5 ${
+              onClick={() => handleSystemChange('hvac')}
+              className={`py-1.5 px-2 rounded-lg transition-all duration-200 flex items-center justify-center space-x-1.5 cursor-pointer ${
                 activeSystem === 'hvac'
                   ? 'bg-white text-sky-900 border border-slate-200 shadow-xs font-bold'
                   : 'text-slate-500 hover:text-slate-900'
@@ -75,8 +101,8 @@ export function Sidebar({
               <span>HVAC Twin</span>
             </button>
             <button
-              onClick={() => onSelectSystem('electrical')}
-              className={`py-1.5 px-2 rounded-lg transition-all duration-200 flex items-center justify-center space-x-1.5 ${
+              onClick={() => handleSystemChange('electrical')}
+              className={`py-1.5 px-2 rounded-lg transition-all duration-200 flex items-center justify-center space-x-1.5 cursor-pointer ${
                 activeSystem === 'electrical'
                   ? 'bg-white text-blue-900 border border-slate-200 shadow-xs font-bold'
                   : 'text-slate-500 hover:text-slate-900'
@@ -101,20 +127,20 @@ export function Sidebar({
               return (
                 <button
                   key={item.id}
-                  onClick={() => onSelectTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all duration-150 ${
+                  onClick={() => handleItemClick(item.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-sky-50 text-sky-900 font-semibold border border-sky-200/80 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+                      ? 'bg-sky-50/80 text-sky-950 font-bold border border-sky-200/80 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
                   }`}
                 >
-                  <div className="flex items-center space-x-2.5">
+                  <div className="flex items-center space-x-3">
                     <Icon className={`w-4 h-4 ${isActive ? 'text-sky-600' : 'text-slate-400'}`} />
-                    <span className="tracking-tight">{item.label}</span>
+                    <span>{item.label}</span>
                   </div>
 
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-bold font-mono-numbers">
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono-numbers font-bold bg-rose-100 text-rose-700 border border-rose-200">
                       {item.badge}
                     </span>
                   )}
@@ -152,6 +178,37 @@ export function Sidebar({
           <span className="text-[11px] font-semibold">Synced</span>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* 1. Desktop Persistent Sidebar */}
+      <aside className="hidden md:flex w-64 bg-white/95 border-r border-slate-200 flex-col shrink-0 min-h-screen justify-between select-none z-20 backdrop-blur-md shadow-xs sticky top-0 h-screen">
+        {sidebarContent}
+      </aside>
+
+      {/* 2. Mobile Drawer Overlay */}
+      <div 
+        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+          onClick={onClose} 
+        />
+        
+        {/* Sliding Panel */}
+        <div 
+          className={`absolute top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-white shadow-2xl transition-transform duration-300 transform flex flex-col justify-between overflow-y-auto ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {sidebarContent}
+        </div>
+      </div>
+    </>
   );
 }

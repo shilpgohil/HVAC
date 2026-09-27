@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Thermometer, 
   Droplets, 
@@ -9,15 +9,23 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   ShieldCheck, 
-  Cpu 
+  Cpu,
+  Plus,
+  Minus,
+  SlidersHorizontal
 } from 'lucide-react';
 import { SystemState } from '@/types/hvac';
+import { updateTemperatureSetpoint, updateHumiditySetpoint } from '@/lib/api';
 
 interface RightPanelProps {
   systemState: SystemState | null;
 }
 
 export function RightPanel({ systemState }: RightPanelProps) {
+  const [localSetPointC, setLocalSetPointC] = useState<number | null>(null);
+  const [localSetPointRh, setLocalSetPointRh] = useState<number | null>(null);
+  const [selectedMode, setSelectedMode] = useState<string>('Auto');
+
   const temps = systemState?.temperatures || {
     current_c: 24.4,
     set_point_c: 22.0,
@@ -47,20 +55,45 @@ export function RightPanel({ systemState }: RightPanelProps) {
   const alarms = systemState?.alarms || [];
   const activeAlarms = alarms.filter(a => a.state !== 'CLEARED');
 
-  const tempDelta = temps.current_c - temps.set_point_c;
-  const rhDelta = humidity.current_rh - humidity.set_point_rh;
+  const currentEffectiveTemp = localSetPointC ?? temps.set_point_c;
+  const currentEffectiveRh = localSetPointRh ?? humidity.set_point_rh;
+
+  const tempDelta = temps.current_c - currentEffectiveTemp;
+  const rhDelta = humidity.current_rh - currentEffectiveRh;
+
+  const handleAdjustTemp = async (delta: number) => {
+    const next = Math.round((currentEffectiveTemp + delta) * 10) / 10;
+    if (next < 16.0 || next > 30.0) return;
+    setLocalSetPointC(next);
+    try {
+      await updateTemperatureSetpoint(next);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAdjustRh = async (delta: number) => {
+    const next = Math.round(currentEffectiveRh + delta);
+    if (next < 30 || next > 75) return;
+    setLocalSetPointRh(next);
+    try {
+      await updateHumiditySetpoint(next);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="space-y-4 flex flex-col">
-      {/* 1. Temperature Telemetry (Read-Only, High Contrast Light Mode) */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] border-t-4 border-t-sky-500">
+      {/* 1. Temperature Telemetry & Interactive Setpoint Controls */}
+      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-t-4 border-t-sky-500">
         <div className="flex items-center justify-between pb-3.5 border-b border-slate-200">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shrink-0">
               <Thermometer className="w-4 h-4" />
             </div>
             <div>
-              <span className="font-bold text-slate-900 text-sm tracking-tight">Temperature Monitoring</span>
+              <span className="font-bold text-slate-900 text-sm tracking-tight">Thermal Management</span>
               <div className="text-[10px] text-slate-600 font-mono-numbers font-medium">Zone A Cleanroom</div>
             </div>
           </div>
@@ -79,8 +112,26 @@ export function RightPanel({ systemState }: RightPanelProps) {
 
           <div>
             <div className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">Target Setpoint</div>
-            <div className="text-2xl font-bold font-mono-numbers text-sky-700 mt-0.5">
-              {temps.set_point_c.toFixed(1)} <span className="text-xs font-normal text-slate-500">°C</span>
+            <div className="flex items-center space-x-2 mt-0.5">
+              <div className="text-2xl font-bold font-mono-numbers text-sky-700">
+                {currentEffectiveTemp.toFixed(1)} <span className="text-xs font-normal text-slate-500">°C</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => handleAdjustTemp(-0.5)}
+                  className="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 transition-colors cursor-pointer active:scale-95"
+                  title="Decrease Setpoint (-0.5°C)"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => handleAdjustTemp(+0.5)}
+                  className="w-6 h-6 rounded-md bg-sky-100 hover:bg-sky-200 border border-sky-300 flex items-center justify-center text-sky-800 transition-colors cursor-pointer active:scale-95"
+                  title="Increase Setpoint (+0.5°C)"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -108,8 +159,8 @@ export function RightPanel({ systemState }: RightPanelProps) {
         </div>
       </div>
 
-      {/* 2. Relative Humidity (RH) Telemetry (Read-Only) */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] border-t-4 border-t-emerald-500">
+      {/* 2. Relative Humidity (RH) Telemetry & Interactive Setpoint */}
+      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-t-4 border-t-emerald-500">
         <div className="flex items-center justify-between pb-3.5 border-b border-slate-200">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
@@ -135,35 +186,40 @@ export function RightPanel({ systemState }: RightPanelProps) {
 
           <div>
             <div className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider">Target Setpoint</div>
-            <div className="text-2xl font-bold font-mono-numbers text-emerald-700 mt-0.5">
-              {humidity.set_point_rh.toFixed(1)} <span className="text-xs font-normal text-slate-500">%</span>
+            <div className="flex items-center space-x-2 mt-0.5">
+              <div className="text-2xl font-bold font-mono-numbers text-emerald-700">
+                {currentEffectiveRh.toFixed(1)} <span className="text-xs font-normal text-slate-500">%</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={() => handleAdjustRh(-1)}
+                  className="w-6 h-6 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 transition-colors cursor-pointer active:scale-95"
+                  title="Decrease RH Target (-1%)"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => handleAdjustRh(+1)}
+                  className="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 flex items-center justify-center text-emerald-800 transition-colors cursor-pointer active:scale-95"
+                  title="Increase RH Target (+1%)"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="pt-3 flex items-center justify-between text-xs">
-          <div className="flex items-center space-x-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${
-              humidity.humidifier_active 
-                ? 'bg-sky-500 animate-pulse' 
-                : humidity.dehumidifier_active 
-                  ? 'bg-amber-500 animate-pulse' 
-                  : 'bg-emerald-500'
-            }`} />
-            <span className="text-slate-800 text-[11px] font-semibold">
-              {humidity.humidifier_active ? 'Steam Injection Active' :
-               humidity.dehumidifier_active ? 'Coil Dehumidification Active' :
-               'Psychrometric Equilibrium'}
-            </span>
-          </div>
-          <span className="text-[11px] font-mono-numbers text-slate-700 font-bold">
+        <div className="mt-3 pt-2.5 border-t border-slate-200 flex justify-between text-[11px] font-mono-numbers">
+          <span className="text-slate-600 font-medium">Humidity Envelope:</span>
+          <span className="text-emerald-700 font-bold">
             {rhDelta >= 0 ? `+${rhDelta.toFixed(1)}` : rhDelta.toFixed(1)}% RH
           </span>
         </div>
       </div>
 
-      {/* 3. Active Alarms (Read-Only) */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] border-t-4 border-t-rose-500">
+      {/* 3. Active Alarms Console */}
+      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs border-t-4 border-t-rose-500">
         <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
@@ -206,16 +262,28 @@ export function RightPanel({ systemState }: RightPanelProps) {
         </div>
       </div>
 
-      {/* 4. Supervisory Telemetry Summary */}
-      <div className="rounded-2xl p-5 bg-white/90 border border-slate-200/80 shadow-[0_4px_16px_-2px_rgba(15,23,42,0.05)] backdrop-blur-md space-y-3">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      {/* 4. Supervisory Telemetry Summary & Mode Switcher */}
+      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-xs space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div className="flex items-center space-x-2">
-            <Cpu className="w-4 h-4 text-slate-400" />
-            <span className="font-bold text-slate-900 text-sm">Plant Telemetry Bus</span>
+            <Cpu className="w-4 h-4 text-slate-500" />
+            <span className="font-bold text-slate-900 text-sm">Control Mode</span>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono-numbers font-medium">
-            MODE: {sysInfo.system_mode.toUpperCase()}
-          </span>
+          <div className="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold">
+            {['Auto', 'Manual', 'Eco'].map((m) => (
+              <button
+                key={m}
+                onClick={() => setSelectedMode(m)}
+                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                  selectedMode === m
+                    ? 'bg-white text-sky-900 shadow-2xs font-bold'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2 text-xs font-mono-numbers">

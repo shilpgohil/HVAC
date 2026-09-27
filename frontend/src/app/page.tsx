@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [systemState, setSystemState] = useState<SystemState | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -134,13 +135,15 @@ export default function DashboardPage() {
         }}
       />
 
-      {/* 1. Left Sidebar (Light Mode) */}
+      {/* 1. Left Sidebar (Responsive: Sticky on Desktop, Drawer on Mobile) */}
       <Sidebar 
         currentTab={currentTab} 
         onSelectTab={handleTabSelect}
         activeSystem={activeSystem}
         onSelectSystem={handleSystemSelect}
         alarmCount={activeAlarmCount}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* 2. Main Content Area */}
@@ -149,6 +152,7 @@ export default function DashboardPage() {
           activeSystem={activeSystem}
           onSelectSystem={handleSystemSelect}
           alarmCount={activeAlarmCount}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
         />
 
         <main className="p-4 md:p-6 space-y-6 max-w-[1780px] w-full mx-auto">
