@@ -1,0 +1,2372 @@
+MASTER ANTIGRAVITY PROMPT — HVAC DIGITAL TWIN & OPERATIONAL CONTROL PLATFORM
+0. ROLE AND OBJECTIVE
+
+You are building a production-grade HVAC Digital Twin + Supervisory Monitoring + Control Platform.
+
+This is NOT a generic HVAC dashboard.
+
+This is NOT a static visualization.
+
+This is NOT a collection of hard-coded mock screens.
+
+This is NOT a frontend-only project.
+
+The final system must represent a real physical HVAC installation as a dynamic, configuration-driven software digital twin, where physical equipment, components, sensors, actuators, relationships, telemetry, alarms, commands, communication health and historical data are represented as software entities.
+
+The platform must be capable of initially operating entirely against a development/simulation environment, and later switching to the client's real MQTT/PLC infrastructure with minimal architectural changes.
+
+The fundamental principle is:
+
+The software must be driven by equipment metadata, topology, point definitions, configuration and live telemetry — never by hard-coded equipment assumptions.
+
+The current Stitch designs are the visual and interaction reference.
+
+They are NOT the source of truth for actual equipment topology or telemetry.
+
+The actual HVAC configuration must come from the application's data/configuration model.
+
+1. FIRST: UNDERSTAND THE PROVIDED DESIGN
+
+Before implementing anything, inspect all provided Stitch artifacts.
+
+The supplied design contains multiple screens including:
+
+Operational Overview
+Live System Schematic
+Equipment Detail / Chiller Detail
+System Topology
+Alarm & Event Center
+Kinetic Operational Interface design specification
+
+Treat these designs as the visual design system and UX reference.
+
+Do not blindly reproduce the sample data shown in them.
+
+For example:
+
+Facility A-12
+PLC-01
+Chiller A
+Chiller B
+PNL-01
+SUB-03
+9 Unit Heater Bank
+500T Chiller
+sample temperatures
+sample alarms
+sample serial numbers
+sample power values
+
+are design examples, not actual system configuration.
+
+The actual application must load these dynamically.
+
+2. CORE PRODUCT CONCEPT
+
+The product has four fundamental responsibilities:
+
+1. VISUALIZE
+
+Represent the physical HVAC plant as a digital twin.
+
+2. MONITOR
+
+Display live telemetry, equipment state, communication health, alarms and system conditions.
+
+3. ANALYZE
+
+Provide trends, historical data, performance metrics, energy information, diagnostics and event history.
+
+4. CONTROL
+
+Allow authorized users to issue supervisory commands and setpoint changes where the underlying equipment supports them.
+
+The PLC/BMS remains the primary real-time control and safety authority.
+
+The web platform is a supervisory layer, not the replacement for PLC safety logic.
+
+3. NON-NEGOTIABLE ARCHITECTURAL PRINCIPLE
+NEVER HARD-CODE THE HVAC SYSTEM.
+
+Do NOT write application logic such as:
+
+if equipment === "Chiller A"
+if component === "Cooling Coil"
+show AHU-01
+show Fan-01
+show three pumps
+hard-coded sensor lists
+hard-coded MQTT topics
+hard-coded PLC addresses
+hard-coded Modbus registers
+hard-coded BACnet objects
+hard-coded equipment relationships
+hard-coded schematic coordinates
+hard-coded alarm definitions
+hard-coded point names
+hard-coded production credentials
+
+The application must work from metadata.
+
+The same frontend/application engine should be capable of representing:
+
+Site A
+ └── Building A
+      └── HVAC System A
+           ├── AHU-01
+           ├── Chiller-01
+           ├── Pump-01
+           └── Room-01
+
+or:
+
+Site B
+ └── Building B
+      └── HVAC System B
+           ├── AHU-01
+           ├── AHU-02
+           ├── Chiller-01
+           ├── Chiller-02
+           ├── CHWP-01
+           ├── CHWP-02
+           ├── Cooling Tower
+           └── multiple zones
+
+without rewriting the application.
+
+4. DIGITAL TWIN MODEL
+
+Create a proper domain model.
+
+The central entity should be:
+
+Component
+
+Everything physical becomes a component.
+
+Examples:
+
+Site
+Building
+HVAC System
+AHU
+Chiller
+Pump
+Fan
+VFD
+Valve
+Damper
+Cooling Coil
+Heating Coil
+Filter
+Humidifier
+Sensor
+Room
+Zone
+PLC
+Control Panel
+Gateway
+Duct
+Pipe
+Heat exchanger
+Cooling tower
+Expansion equipment
+etc.
+
+Do not assume this list is exhaustive.
+
+The architecture must support new component types without modifying core business logic.
+
+5. SEPARATE THREE DIFFERENT THINGS
+
+This is extremely important.
+
+Keep these independently modeled:
+
+A. Physical topology
+
+What is connected to what?
+
+Example:
+
+AHU-01
+ ├── Filter-01
+ ├── CoolingCoil-01
+ ├── Fan-01
+ └── Damper-01
+B. Visual layout
+
+Where does each object appear on the digital twin?
+
+Example:
+
+CoolingCoil-01
+x: 430
+y: 300
+rotation: 0
+C. Telemetry
+
+What values are currently being reported?
+
+Example:
+
+CoolingCoil-01
+air_in_temperature
+air_out_temperature
+water_supply_temperature
+water_return_temperature
+water_flow
+valve_position
+
+Changing the visual layout must NOT modify the physical topology.
+
+Changing telemetry mappings must NOT require changing React components.
+
+6. SEMANTIC MODEL
+
+Use a semantic building/HVAC model where appropriate.
+
+Support concepts compatible with standards such as:
+
+Project Haystack
+Brick Schema
+ASHRAE semantic concepts
+
+Do not unnecessarily introduce a heavyweight semantic stack if it complicates the MVP.
+
+The important principle is:
+
+Equipment and points must have machine-readable meaning.
+
+The application should understand that a point is, for example:
+
+Supply Air Temperature
+
+rather than simply:
+
+point_182
+
+where possible.
+
+However, arbitrary client naming must also be supported.
+
+Never assume the client's naming convention.
+
+7. POINT MODEL
+
+Every telemetry point must have metadata.
+
+At minimum:
+
+point_id
+component_id
+name
+display_name
+point_type
+value
+unit
+timestamp
+quality
+source
+status
+readable
+writable
+min
+max
+precision
+description
+
+Possible point types:
+
+sensor
+status
+command
+setpoint
+meter
+counter
+alarm
+mode
+state
+calculated
+
+Example:
+
+Supply Air Temperature
+value: 17.8
+unit: °C
+timestamp: ...
+quality: GOOD
+source: MQTT
+readable: true
+writable: false
+8. DATA QUALITY IS FIRST-CLASS
+
+Never display stale telemetry as live telemetry.
+
+Every point must have quality.
+
+Support:
+
+GOOD
+UNCERTAIN
+STALE
+BAD
+DISCONNECTED
+UNKNOWN
+
+The UI must visibly communicate stale/offline data.
+
+Example:
+
+LIVE
+STALE
+NO DATA
+OFFLINE
+
+Do not simply leave the last value displayed with a green indicator.
+
+9. EQUIPMENT STATES
+
+Equipment should support standardized states such as:
+
+NORMAL
+RUNNING
+STOPPED
+STARTING
+STOPPING
+WARNING
+FAULT
+OFFLINE
+UNKNOWN
+
+The system must allow equipment-specific state mappings.
+
+Do not assume every equipment type has the same states.
+
+10. CONTROL MODES
+
+Support:
+
+AUTO
+MANUAL
+REMOTE
+LOCAL
+LOCKED
+OFF
+UNKNOWN
+
+Manual/override states must be visually obvious.
+
+The Stitch design's cyan/manual semantic should be retained.
+
+11. ALARM MODEL
+
+Alarms must be proper entities.
+
+Each alarm should contain:
+
+alarm_id
+component_id
+point_id
+severity
+condition
+message
+value_at_trigger
+threshold
+timestamp
+state
+acknowledged_by
+acknowledged_at
+cleared_at
+source
+
+Severity:
+
+INFO
+WARNING
+CRITICAL
+EMERGENCY
+
+Alarm lifecycle:
+
+ACTIVE
+ACKNOWLEDGED
+CLEARED
+
+Potentially support:
+
+RETURNED
+SHELVED
+SUPPRESSED
+
+if required later.
+
+12. COMMAND MODEL
+
+Commands must be first-class objects.
+
+Example:
+
+command_id
+component_id
+point_id
+command_type
+requested_value
+requested_by
+requested_at
+status
+validated
+sent
+acknowledged
+confirmed
+failed
+failure_reason
+completed_at
+
+Possible command types:
+
+START
+STOP
+SET_SPEED
+SET_SETPOINT
+SET_MODE
+OPEN
+CLOSE
+ENABLE
+DISABLE
+RESET
+
+Do not assume these are exhaustive.
+
+Commands must be dynamically defined based on equipment capability.
+
+13. COMMAND SAFETY
+
+Never allow:
+
+Browser → PLC
+
+The architecture must be:
+
+Browser
+ ↓
+Backend
+ ↓
+Authentication
+ ↓
+Authorization
+ ↓
+Validation
+ ↓
+Safety/business rules
+ ↓
+MQTT command
+ ↓
+Gateway / PLC
+ ↓
+Actual equipment
+ ↓
+State confirmation
+ ↓
+Backend
+ ↓
+WebSocket
+ ↓
+UI
+
+The UI must NOT assume that sending a command means the equipment changed state.
+
+It must wait for confirmation.
+
+14. TWO-STEP SAFETY FOR CONTROL
+
+Commands that materially affect equipment must require confirmation.
+
+Examples:
+
+Stop
+Emergency stop
+Disable
+Manual override
+Setpoint changes outside normal ranges
+Mode changes
+Reset faults
+
+Use the Stitch design principle:
+
+Safety-critical controls must visually distinguish themselves and require deliberate interaction.
+
+Do not make dangerous actions a single accidental click.
+
+15. MQTT ARCHITECTURE
+
+MQTT must be hidden behind the backend.
+
+The browser should NOT directly connect to the client's MQTT broker.
+
+Use:
+
+MQTT
+ ↓
+Backend ingestion
+ ↓
+Normalization
+ ↓
+Canonical model
+ ↓
+Database/current state
+ ↓
+WebSocket
+ ↓
+Frontend
+
+The frontend should have zero knowledge of:
+
+MQTT broker
+MQTT credentials
+Modbus
+BACnet
+PLC registers
+protocol-specific payloads
+16. MQTT MUST BE CONFIGURATION-DRIVEN
+
+Never hard-code:
+
+broker.emqx.io
+1883
+username
+password
+topic
+
+Use environment/configuration.
+
+Development example:
+
+MQTT_BROKER_HOST
+MQTT_BROKER_PORT
+MQTT_USERNAME
+MQTT_PASSWORD
+MQTT_TLS
+MQTT_TOPIC_PREFIX
+
+Production should only require configuration changes.
+
+17. DEVELOPMENT DATA SOURCE
+
+The initial system must work without the client's real HVAC infrastructure.
+
+Use a replaceable development source.
+
+Preferred architecture:
+
+HVAC/BACnet Simulator
+        ↓
+Protocol Adapter
+        ↓
+Canonical HVAC Model
+        ↓
+MQTT
+        ↓
+Backend
+
+A public/shared MQTT broker may be used during development.
+
+The application must NOT be architecturally tied to a public broker.
+
+The MQTT broker must be configurable.
+
+Do not put confidential client data on public MQTT infrastructure.
+
+18. REALISTIC SIMULATION
+
+Do NOT create static dummy JSON.
+
+The simulator must behave like an actual system.
+
+For example:
+
+Room temperature increases
+        ↓
+Cooling demand increases
+        ↓
+Cooling valve opens
+        ↓
+CHW flow changes
+        ↓
+Coil leaving air temperature changes
+        ↓
+Supply air changes
+        ↓
+Chiller load changes
+        ↓
+Pump response changes
+
+Likewise:
+
+Fan speed increases
+        ↓
+Airflow increases
+        ↓
+Static pressure changes
+        ↓
+Power consumption changes
+
+The simulator should support:
+
+normal operation
+startup
+shutdown
+changing load
+temperature variation
+fan ramping
+valve modulation
+pump modulation
+chiller load
+setpoint changes
+alarms
+stale data
+communication failure
+equipment fault
+manual override
+recovery
+command acknowledgement
+
+The simulator must be replaceable by the real client data source later.
+
+19. SIMULATION SCENARIOS
+
+Implement configurable simulation scenarios.
+
+At minimum:
+
+Normal
+
+All equipment healthy.
+
+High cooling demand
+
+Room temperature rises and cooling demand increases.
+
+Fan failure
+
+Fan command exists but fan status fails.
+
+Pump failure
+
+Pump loses availability.
+
+High filter differential pressure
+
+Filter DP gradually increases.
+
+Low chilled-water flow
+
+Flow falls below configured threshold.
+
+High supply temperature
+
+Supply air temperature exceeds configured range.
+
+Sensor failure
+
+Sensor reports BAD/UNKNOWN.
+
+Communication failure
+
+Equipment stops reporting.
+
+Stale telemetry
+
+Data timestamp becomes old.
+
+Manual override
+
+Equipment switches from AUTO to MANUAL.
+
+Recovery
+
+Fault clears and equipment returns to normal.
+
+Command failure
+
+Command is sent but physical state does not confirm.
+
+These scenarios are essential for testing the UI and backend.
+
+20. FRONTEND ARCHITECTURE
+
+Use a component-driven frontend.
+
+Prefer:
+
+React / Next.js
+TypeScript
+SVG-based digital twin
+WebSocket real-time updates
+
+Do NOT create one giant HVAC component.
+
+Create reusable components such as:
+
+DigitalTwin
+AHU
+Chiller
+Pump
+Fan
+VFD
+Valve
+Damper
+CoolingCoil
+HeatingCoil
+Filter
+Duct
+Pipe
+Sensor
+Room
+Zone
+FlowPath
+FlowParticles
+TelemetryBadge
+StatusBadge
+AlarmIndicator
+EquipmentCard
+KPI
+TrendChart
+CommandPanel
+
+Components must receive configuration/data.
+
+21. DIGITAL TWIN MUST BE REAL
+
+This is critical.
+
+The Stitch schematic contains visual representations, but the production application must NOT simply place a static image behind telemetry labels.
+
+Do NOT use:
+
+PNG
+JPG
+single SVG screenshot
+
+as the entire HVAC system.
+
+Instead build the schematic using:
+
+SVG
+React
+CSS
+data-driven paths
+
+Every physical object must be independently addressable.
+
+For example:
+
+Fan
+Cooling Coil
+Filter
+Valve
+Damper
+Pump
+Chiller
+
+must each be independently selectable.
+
+22. FLOW VISUALIZATION
+
+Air and water flow should be visually represented.
+
+Use animated SVG paths/particles where appropriate.
+
+Examples:
+
+Fresh Air → Filter → Coil → Fan → Supply → Room
+
+and:
+
+Chiller → CHW Pump → Cooling Coil → Return → Chiller
+
+Animation must be based on live state.
+
+Examples:
+
+flow = 0
+
+means no movement.
+
+flow > 0
+
+means active flow.
+
+Higher flow can produce faster/more visible movement.
+
+Fault/offline state must affect the visualization.
+
+Do not create decorative animation unrelated to telemetry.
+
+23. DIGITAL TWIN INTERACTION
+
+Every component should support:
+
+Hover
+
+Show quick telemetry.
+
+Click
+
+Open component detail.
+
+Double-click or explicit action
+
+Navigate to full equipment detail.
+
+Alarm
+
+Highlight component.
+
+Offline
+
+Use stale/offline visual state.
+
+Manual override
+
+Show cyan/manual indicator.
+
+Fault
+
+Show appropriate warning/critical treatment.
+
+The user should always be able to trace:
+
+visual object
+→ equipment
+→ component
+→ point
+→ live telemetry
+→ historical trend
+→ alarms
+→ commands
+24. OPERATIONAL OVERVIEW
+
+Reproduce the Stitch design language of the Operational Overview.
+
+It should provide:
+
+facility identity
+system status
+live timestamp
+communication status
+master controller/PLC status
+system KPIs
+equipment summary
+active alarms
+subsystem status
+stale/offline equipment
+quick navigation
+
+Do not use the sample PLC values from Stitch.
+
+All values must be dynamic.
+
+25. LIVE SYSTEM SCHEMATIC
+
+This is one of the most important screens.
+
+It should contain:
+
+Main digital twin
+
+Large interactive SVG schematic.
+
+Live telemetry overlays
+
+Examples:
+
+temperature
+humidity
+pressure
+airflow
+flow
+valve position
+damper position
+fan speed
+Active setpoints
+
+Dynamic.
+
+Efficiency metrics
+
+Dynamic/calculated.
+
+System mode
+
+AUTO/MANUAL/etc.
+
+Equipment states
+
+Dynamic.
+
+Localized alarm indicators
+
+Clicking an alarm should identify its physical location.
+
+26. EQUIPMENT DETAIL
+
+Equipment detail pages must be dynamically generated.
+
+Do NOT build a separate hard-coded page for:
+
+Chiller A
+AHU A
+Pump A
+
+Build one equipment detail framework.
+
+The equipment metadata determines:
+
+title
+equipment type
+available KPIs
+points
+trends
+commands
+specifications
+alarms
+diagnostics
+
+So:
+
+Chiller → Chiller detail template
+AHU → AHU detail template
+Pump → Pump detail template
+
+but all are driven from configuration.
+
+27. EQUIPMENT DETAIL SHOULD INCLUDE
+
+Where applicable:
+
+current status
+mode
+live KPIs
+telemetry
+trends
+operating data
+specifications
+active alarms
+historical alarms
+commands
+setpoints
+runtime
+energy
+maintenance information
+communication health
+
+If a piece of equipment does not have a point, do not show an empty fake value.
+
+The UI should adapt to available capabilities.
+
+28. SYSTEM TOPOLOGY
+
+Implement a topology view.
+
+It should dynamically visualize:
+
+PLC
+ ↓
+Panels
+ ↓
+Equipment
+ ↓
+Subsystems
+ ↓
+Components
+
+Topology must come from relationships in the data model.
+
+Never draw a fixed seven-node topology because the Stitch example shows seven nodes.
+
+If there are:
+
+3 panels
+
+show 3.
+
+If there are:
+
+18 panels
+
+show 18.
+
+29. COMMUNICATION HEALTH
+
+Treat communication as a major operational domain.
+
+Display:
+
+PLC online/offline
+MQTT connection
+gateway status
+last message
+latency
+heartbeat
+packet/data freshness
+protocol health
+equipment connectivity
+stale points
+
+Communication failure should be visually distinguishable from equipment failure.
+
+For example:
+
+Equipment fault
+
+is not the same thing as:
+
+Equipment unreachable
+
+Do not conflate the two.
+
+30. ALARM & EVENT CENTER
+
+Implement the Stitch Alarm/Event Center concept.
+
+Capabilities:
+
+all alarms
+active
+acknowledged
+cleared
+severity filtering
+equipment filtering
+point filtering
+time filtering
+search
+sorting
+alarm details
+acknowledgement
+bulk acknowledgement where authorized
+historical occurrences
+point data at trigger
+trend navigation
+related equipment
+diagnostics
+audit trail
+
+The right-side alarm detail drawer/panel should be dynamically generated.
+
+31. ALARM DETAIL
+
+When an alarm is selected, show:
+
+Alarm
+Severity
+Equipment
+Point
+Current state
+Trigger value
+Threshold
+Timestamp
+Acknowledgement
+Historical occurrences
+Related telemetry
+Trend
+Diagnosis if available
+Recommended next action if configured
+
+Do not invent AI diagnoses.
+
+If diagnostics are not actually implemented, clearly label the area as unavailable rather than fabricating an explanation.
+
+32. HISTORICAL DATA
+
+Store historical telemetry where appropriate.
+
+The system should support:
+
+1H
+6H
+24H
+7D
+30D
+custom range
+
+depending on the data retention configuration.
+
+Charts should support:
+
+multiple points
+tooltips
+zoom
+time synchronization
+threshold markers
+alarm markers
+gaps in data
+stale periods
+
+Never interpolate missing telemetry in a way that falsely implies actual readings.
+
+33. ENERGY ANALYTICS
+
+Where the required points exist, support:
+
+instantaneous power
+energy
+cooling load
+efficiency
+kW/ton
+COP
+runtime
+equipment utilization
+
+Derived metrics must clearly distinguish:
+
+measured
+calculated
+estimated
+
+Do not fabricate energy data when the underlying points don't exist.
+
+34. SEARCH
+
+The global search shown in Stitch should become functional.
+
+Support searching by:
+
+equipment ID
+equipment name
+component ID
+point ID
+point name
+alarm ID
+tag
+PLC
+panel
+room
+zone
+
+Search results should navigate to the relevant object.
+
+35. NAVIGATION
+
+Preserve the Stitch navigation model.
+
+Core navigation should include concepts such as:
+
+Facility Overview
+System Map
+Panel / System Topology
+Equipment Diagnostics
+Maintenance / Logs
+Alarm History
+Settings
+Operator Profile
+
+Navigation should be configuration-aware where possible.
+
+Do not expose meaningless pages if the installation does not support them.
+
+36. USER ROLES
+
+Implement authorization architecture from the beginning.
+
+At minimum:
+
+Viewer
+Operator
+Engineer
+Administrator
+
+Potential permissions:
+
+VIEW_TELEMETRY
+VIEW_ALARMS
+ACK_ALARM
+VIEW_HISTORY
+ISSUE_COMMAND
+CHANGE_SETPOINT
+MANUAL_OVERRIDE
+EMERGENCY_STOP
+MANAGE_USERS
+MANAGE_CONFIGURATION
+
+Do not rely on frontend permission checks alone.
+
+Backend authorization is mandatory.
+
+37. DESIGN SYSTEM
+
+Use the supplied Stitch design system as the foundation.
+
+Primary personality:
+
+Technical. Precise. Stoic. Industrial. High-confidence.
+
+Avoid:
+
+SaaS-like rounded cards everywhere
+excessive gradients
+glassmorphism
+decorative shadows
+neon gaming aesthetics
+excessive animation
+unnecessary illustrations
+excessive whitespace
+consumer-app styling
+
+The UI should feel like:
+
+a premium modern industrial control-room system.
+
+38. COLOR SYSTEM
+
+Use the supplied semantic design system.
+
+Base:
+
+#031427
+#020617
+#0F172A
+#102034
+#1B2B3F
+#26364A
+
+Text:
+
+#D3E4FE
+#C5C6CD
+
+Semantic:
+
+Healthy: #22C55E
+Warning: #F59E0B
+Critical: #EF4444
+Stale: #94A3B8
+Manual: #06B6D4
+
+Do not randomly introduce colors.
+
+Color must communicate operational meaning.
+
+Do not rely on color alone.
+
+39. TYPOGRAPHY
+
+Use:
+
+Inter
+
+For:
+
+navigation
+headings
+labels
+buttons
+descriptions
+JetBrains Mono
+
+For:
+
+telemetry
+numerical values
+timestamps
+IDs
+engineering values
+technical metadata
+
+Live values should not visually jump around because of proportional font widths.
+
+40. LAYOUT
+
+Use:
+
+12-column desktop grid
+16px gutters
+32px desktop margins
+16px mobile margins
+4px spacing baseline
+compact engineered spacing
+
+Maintain strong alignment.
+
+Panels should feel like engineered control panels.
+
+41. RESPONSIVE DESIGN
+
+Desktop:
+
+>1280px
+
+Full operational interface.
+
+Tablet:
+
+768–1280px
+
+Adaptive two-column layouts.
+
+Mobile:
+
+<768px
+
+Single-column.
+
+But this is an industrial application, so mobile should NOT simply shrink the desktop UI.
+
+On mobile:
+
+prioritize alarms
+prioritize equipment status
+use horizontally scrollable digital twin where required
+use sticky KPI summary
+collapse charts
+transform tables into usable cards
+keep command controls deliberate
+preserve safety confirmations
+42. PERFORMANCE
+
+The UI must remain responsive with:
+
+many equipment objects
+hundreds/thousands of points
+frequent telemetry updates
+multiple WebSocket messages per second
+
+Do NOT rerender the entire digital twin every time one sensor changes.
+
+Use:
+
+normalized state
+selective subscriptions
+memoization
+component-level updates
+throttling/debouncing where appropriate
+efficient SVG rendering
+virtualization for large tables
+43. REAL-TIME DATA ARCHITECTURE
+
+Use WebSocket for live updates.
+
+Architecture:
+
+MQTT
+ ↓
+Ingestion
+ ↓
+Normalization
+ ↓
+Current State
+ ↓
+WebSocket Event
+ ↓
+Specific frontend subscribers
+
+Do not broadcast the entire HVAC state on every point change.
+
+Use granular events where practical.
+
+Example:
+
+POINT_UPDATED
+EQUIPMENT_STATE_CHANGED
+ALARM_CREATED
+ALARM_CLEARED
+COMMAND_STATUS_CHANGED
+COMMUNICATION_STATUS_CHANGED
+44. DATABASE
+
+Use PostgreSQL or an appropriate relational database.
+
+Model at least:
+
+sites
+buildings
+systems
+components
+component_types
+component_relationships
+points
+point_values/current_state
+telemetry
+alarms
+alarm_events
+commands
+command_history
+users
+roles
+permissions
+maintenance_records
+visual_config
+system_configuration
+
+Avoid coupling database structure directly to raw MQTT payload structure.
+
+MQTT payloads are an integration format.
+
+Your database is the domain model.
+
+45. API
+
+Provide clean APIs for:
+
+sites
+systems
+components
+topology
+points
+current state
+historical telemetry
+alarms
+commands
+equipment details
+configuration
+users
+health
+
+API responses must be stable and versionable.
+
+Do not leak internal protocol details unnecessarily.
+
+46. CONFIGURATION
+
+All environment-specific information must be configurable.
+
+Examples:
+
+MQTT broker
+MQTT credentials
+MQTT topics
+database
+WebSocket
+site
+equipment
+point mappings
+units
+thresholds
+alarm rules
+visual coordinates
+permissions
+feature flags
+
+Never put these into source code.
+
+47. UNITS
+
+Units must be metadata-driven.
+
+Support at least:
+
+°C
+°F
+%
+Pa
+kPa
+bar
+PSI
+m³/h
+L/s
+GPM
+kW
+kWh
+A
+V
+Hz
+RPM
+ppm
+
+Do not assume one unit globally.
+
+Allow display-unit conversion independently from stored engineering units.
+
+48. TIME
+
+All backend timestamps should be handled consistently.
+
+Prefer:
+
+UTC internally
+
+with user/site timezone applied at presentation.
+
+Every telemetry point must have a timestamp.
+
+Every command must have a timestamp.
+
+Every alarm event must have a timestamp.
+
+49. AUDIT LOGGING
+
+Audit:
+
+login
+logout
+command
+setpoint change
+manual override
+alarm acknowledgement
+configuration changes
+user changes
+permission changes
+
+For commands record:
+
+who
+when
+what
+where
+previous value
+requested value
+result
+PLC confirmation
+50. SECURITY
+
+Do not store credentials in source.
+
+Use environment variables/secrets.
+
+Implement:
+
+authentication
+authorization
+secure sessions/tokens
+input validation
+command authorization
+audit logs
+MQTT authentication
+TLS where available
+backend-only broker credentials
+
+The frontend must never contain production MQTT credentials.
+
+51. ERROR HANDLING
+
+Design explicitly for:
+
+MQTT unavailable
+
+UI should say communication unavailable.
+
+Backend unavailable
+
+Display connection state.
+
+PLC offline
+
+Clearly distinguish it.
+
+Sensor stale
+
+Show stale.
+
+Sensor bad
+
+Show bad.
+
+Equipment fault
+
+Show fault.
+
+Command timeout
+
+Show command timeout.
+
+Command rejected
+
+Show rejection reason.
+
+Partial data
+
+Render available data and identify missing data.
+
+Never silently substitute fake values.
+
+52. NO FAKE DATA IN PRODUCTION MODE
+
+Development may use simulation.
+
+Production must never silently fall back to:
+
+random number
+static number
+sample value
+mock value
+
+If production data isn't available:
+
+NO DATA
+OFFLINE
+STALE
+UNKNOWN
+
+must be shown.
+
+53. MAINTENANCE
+
+The architecture should support:
+
+maintenance history
+service dates
+runtime
+component lifecycle
+service notes
+maintenance status
+future work-order integration
+
+Do not create fake maintenance records.
+
+54. OBSERVABILITY
+
+The backend must expose system health.
+
+Monitor:
+
+MQTT connection
+MQTT message rate
+MQTT errors
+backend health
+database health
+WebSocket clients
+processing latency
+message timestamps
+stale points
+command latency
+command failures
+
+Provide a health/diagnostics endpoint.
+
+55. TESTING
+
+Create tests for:
+
+Domain model
+
+Components and relationships.
+
+Telemetry
+
+Correct normalization.
+
+MQTT
+
+Connect/disconnect/reconnect.
+
+WebSocket
+
+Live state propagation.
+
+Commands
+
+Validation and confirmation.
+
+Alarms
+
+Trigger/ack/clear lifecycle.
+
+Simulator
+
+Scenario transitions.
+
+Permissions
+
+Unauthorized command rejection.
+
+Digital Twin
+
+Topology correctly rendered.
+
+Responsive UI
+
+Desktop/tablet/mobile.
+
+56. END-TO-END TEST
+
+The following must work:
+
+Simulator
+ ↓
+MQTT
+ ↓
+Backend
+ ↓
+Database
+ ↓
+WebSocket
+ ↓
+Digital Twin
+
+Then:
+
+User
+ ↓
+UI command
+ ↓
+Backend
+ ↓
+MQTT
+ ↓
+Simulator
+ ↓
+Changed state
+ ↓
+MQTT
+ ↓
+Backend
+ ↓
+WebSocket
+ ↓
+UI confirmation
+
+This round-trip must be demonstrated before considering the control architecture complete.
+
+57. FAILURE TEST
+
+Test:
+
+MQTT disconnected
+Simulator stopped
+One sensor stops reporting
+One equipment becomes offline
+Command times out
+Alarm triggers
+Alarm acknowledged
+Alarm clears
+Equipment switches to manual
+Equipment returns to automatic
+
+The UI must remain coherent in every scenario.
+
+58. STITCH DESIGN IMPLEMENTATION RULE
+
+Do not "improve" the Stitch design by turning it into a generic modern SaaS dashboard.
+
+The design language should remain:
+
+High-end industrial operational software.
+
+Preserve:
+
+dark control-room theme
+strong panel structure
+precise borders
+technical typography
+compact telemetry
+semantic colors
+dense but readable information
+deliberate hierarchy
+restrained animation
+professional engineering aesthetic
+
+However, improve implementation quality where needed:
+
+accessibility
+responsive behavior
+real interaction
+dynamic data
+performance
+keyboard navigation
+state handling
+loading states
+error states
+empty states
+59. DO NOT COPY STITCH SAMPLE DATA
+
+The Stitch screens are reference designs.
+
+Never make:
+
+Chiller A
+Chiller B
+PNL-01
+PNL-02
+PNL-03
+
+permanent application entities merely because they appear in the mockup.
+
+The UI should generate those from configuration.
+
+60. DIGITAL TWIN VISUAL CONFIGURATION
+
+Visual configuration should support:
+
+component_id
+x
+y
+width
+height
+rotation
+layer
+parent
+connection_points
+style
+visibility
+
+Connections should also be data-driven.
+
+For example:
+
+component A
+ → component B
+
+defines a physical relationship.
+
+The renderer decides how to display that relationship.
+
+61. VISUAL STATES
+
+Every visual component should support:
+
+NORMAL
+RUNNING
+STOPPED
+WARNING
+FAULT
+OFFLINE
+STALE
+MANUAL
+DISABLED
+UNKNOWN
+
+The exact states available should be based on component capability.
+
+62. FLOW PATH STATES
+
+Pipes/ducts should support:
+
+NO_FLOW
+FLOWING
+LOW_FLOW
+HIGH_FLOW
+UNKNOWN
+OFFLINE
+
+Visual animation should derive from this.
+
+63. LOADING STATES
+
+Do not show blank screens while loading.
+
+Use deliberate technical loading states.
+
+Example:
+
+INITIALIZING SYSTEM TELEMETRY
+CONNECTING TO DATA SOURCE
+SYNCHRONIZING EQUIPMENT STATE
+
+But don't over-animate.
+
+64. EMPTY STATES
+
+Example:
+
+NO ACTIVE ALARMS
+NO HISTORICAL DATA
+NO COMMANDS AVAILABLE
+NO TELEMETRY AVAILABLE
+
+Never show fake content just to fill space.
+
+65. ACCESSIBILITY
+
+Support:
+
+keyboard navigation
+visible focus
+sufficient contrast
+semantic labels
+tooltips
+non-color alarm indicators
+screen-reader-friendly controls where practical
+accessible command confirmation
+
+The Stitch cyan focus treatment should be preserved.
+
+66. ENGINEERING PRECISION
+
+Do not round values unnecessarily.
+
+Store engineering precision correctly.
+
+Display precision should be configurable.
+
+Example:
+
+17.83 °C
+
+may be displayed as:
+
+17.8 °C
+
+depending on point configuration.
+
+67. FRONTEND DATA RULE
+
+React components should NEVER directly understand MQTT.
+
+Bad:
+
+React → MQTT
+
+Correct:
+
+React
+ ↓
+API / WebSocket
+ ↓
+Backend
+ ↓
+Canonical State
+ ↓
+MQTT Adapter
+68. BACKEND PROTOCOL RULE
+
+The backend must isolate external protocols.
+
+Create an adapter architecture capable of supporting:
+
+MQTT
+BACnet/IP
+BACnet MS/TP
+Modbus TCP
+Modbus RTU
+REST
+other future protocols
+
+without changing the domain model.
+
+For example:
+
+Protocol Adapter
+      ↓
+Normalized Point
+      ↓
+Canonical Domain
+69. PRODUCTION MIGRATION
+
+The development system must eventually allow:
+
+Development
+HVAC Simulator
+ ↓
+Test MQTT
+ ↓
+Backend
+ ↓
+Frontend
+Production
+Client PLC/BMS
+ ↓
+Client Gateway
+ ↓
+Client MQTT
+ ↓
+Backend
+ ↓
+Frontend
+
+The frontend should remain unchanged.
+
+The domain model should remain unchanged.
+
+Only the integration/configuration layer should change.
+
+70. PROJECT STRUCTURE
+
+Keep the codebase modular.
+
+Suggested backend domains:
+
+auth
+users
+sites
+systems
+components
+topology
+points
+telemetry
+alarms
+commands
+analytics
+mqtt
+protocol_adapters
+simulator
+configuration
+health
+audit
+websocket
+
+Frontend domains:
+
+layout
+navigation
+digital-twin
+equipment
+telemetry
+alarms
+commands
+analytics
+topology
+configuration
+shared
+
+Do not organize everything around individual screens.
+
+Organize around reusable domains/components.
+
+71. DEVELOPMENT WORKFLOW
+
+Do not immediately start writing hundreds of files.
+
+First perform:
+
+Phase 1 — Architecture audit
+
+Understand:
+
+existing repository
+technology
+existing files
+Stitch artifacts
+available dependencies
+current implementation
+Phase 2 — Domain model
+
+Define:
+
+component model
+point model
+topology
+visual configuration
+telemetry
+alarms
+commands
+Phase 3 — Data contracts
+
+Define:
+
+MQTT topics
+MQTT payloads
+API contracts
+WebSocket events
+database schema
+Phase 4 — Simulator
+
+Build realistic development data source.
+
+Phase 5 — Backend
+
+Implement ingestion, normalization, state, alarms, commands and APIs.
+
+Phase 6 — Digital Twin
+
+Implement the actual SVG/React system visualization.
+
+Phase 7 — Operational UI
+
+Implement all Stitch screens.
+
+Phase 8 — Integration
+
+Connect everything end-to-end.
+
+Phase 9 — Testing
+
+Test normal and failure scenarios.
+
+Phase 10 — Production readiness
+
+Security, observability, deployment and configuration.
+
+72. IMPORTANT: DON'T OVERENGINEER
+
+The architecture must be extensible, but don't introduce unnecessary distributed systems.
+
+For the MVP:
+
+A modular monolith backend is acceptable.
+
+For example:
+
+FastAPI
+PostgreSQL
+MQTT
+WebSocket
+React/Next.js
+
+is completely acceptable.
+
+Do not introduce Kafka, Kubernetes, microservices, service mesh, event sourcing, etc. unless an actual requirement exists.
+
+Build a clean architecture that can evolve.
+
+73. SOURCE OF TRUTH
+
+Define clear ownership:
+
+Physical truth
+
+PLC/BMS/equipment.
+
+Integration truth
+
+Protocol adapter.
+
+Application state
+
+Backend canonical model/database.
+
+Real-time delivery
+
+WebSocket.
+
+Visualization
+
+Frontend digital twin.
+
+Never let the frontend become the source of truth for physical equipment state.
+
+74. IMPORTANT DISTINCTION
+
+Do not confuse:
+
+Equipment State
+
+with:
+
+Communication State
+
+Example:
+
+Fan:
+RUNNING
+
+Communication:
+OFFLINE
+
+This should not automatically be interpreted as:
+
+Fan is stopped
+
+Instead:
+
+Last known state: RUNNING
+Communication: OFFLINE
+Data quality: STALE
+
+This distinction is critical for industrial monitoring.
+
+75. COMMAND CONFIRMATION
+
+When the operator requests:
+
+START FAN
+
+UI should show:
+
+Command requested
+      ↓
+Command sent
+      ↓
+Waiting for equipment confirmation
+      ↓
+Equipment RUNNING
+
+If confirmation doesn't arrive:
+
+Command timeout
+
+Do not simply change the UI to RUNNING because the user clicked START.
+
+76. ALARM ACKNOWLEDGEMENT
+
+Acknowledging an alarm does NOT mean clearing it.
+
+Maintain:
+
+ACTIVE + ACKNOWLEDGED
+
+until the actual condition clears.
+
+The UI must communicate this correctly.
+
+77. NO INVENTED HVAC LOGIC
+
+Do not invent control sequences for the client's actual plant.
+
+The application can provide generic framework support, but actual sequences such as:
+
+when fan starts
+open damper
+wait 5 sec
+start pump
+modulate valve
+
+must come from the HVAC/control engineer's documented control philosophy.
+
+The platform should represent and supervise the client's actual logic rather than inventing it.
+
+78. DOCUMENTATION
+
+Create and maintain documentation for:
+
+product overview
+architecture
+HVAC model
+digital twin model
+component catalog
+point model
+point list
+MQTT specification
+API specification
+WebSocket specification
+command specification
+alarm specification
+database schema
+frontend architecture
+design system
+simulator
+security
+testing
+deployment
+
+Documentation must remain synchronized with implementation.
+
+79. ACCEPTANCE CRITERIA
+
+Do not consider the project complete until:
+
+Architecture
+No HVAC equipment is hard-coded.
+Equipment comes from configuration/data.
+Points are dynamically mapped.
+Topology is dynamic.
+Visual positions are configuration-driven.
+Data
+MQTT is configurable.
+Simulator works.
+Real-time telemetry works.
+Data quality is represented.
+Historical data works.
+Digital Twin
+Components are real interactive objects.
+Flow is dynamic.
+States are dynamic.
+Alarms highlight physical components.
+Equipment can be selected.
+Equipment detail is dynamically generated.
+Control
+Commands are backend mediated.
+Authorization exists.
+Confirmation exists.
+Audit trail exists.
+Timeout/failure handling exists.
+Alarms
+Trigger.
+Active.
+Acknowledge.
+Clear.
+Historical occurrence.
+Detail.
+Filtering.
+UX
+Stitch design language preserved.
+Desktop.
+Tablet.
+Mobile.
+Loading.
+Empty.
+Error.
+Offline.
+Stale.
+Fault.
+Manual override.
+Engineering
+No fake production values.
+No credentials in source.
+No browser-to-PLC communication.
+No browser-to-MQTT production connection.
+No protocol logic inside UI.
+No hard-coded topology.
+80. FINAL DEVELOPMENT PRINCIPLE
+
+The final product should behave as though the physical HVAC system has been instantiated inside the software.
+
+The user should be able to look at the system and understand:
+
+WHERE is the equipment?
+WHAT is it?
+WHAT is it doing?
+WHAT are its current values?
+HOW is it connected?
+IS the data trustworthy?
+IS something wrong?
+WHAT happened historically?
+WHAT can I control?
+WHAT happened when I issued the command?
+
+The platform should make the physical HVAC plant understandable digitally without pretending that the software itself is the PLC.
+
+FINAL DIRECTIVE TO ANTIGRAVITY
+
+Before implementing any feature, ask:
+
+Is this information actually coming from configuration, topology, metadata, telemetry, a calculated value, or a real command state?
+
+If the answer is:
+
+"I am putting it here because the Stitch screenshot has it"
+
+then do not hard-code it.
+
+Instead determine what data model/configuration is required to generate it dynamically.
+
+If something is unavailable, represent it honestly as:
+
+UNKNOWN
+NO DATA
+STALE
+OFFLINE
+NOT CONFIGURED
+
+rather than inventing a value.
+
+Build the platform as a generic HVAC Digital Twin engine first, and instantiate the client's particular HVAC plant through configuration and live data.
+
+The Stitch designs define the visual language.
+
+The HVAC configuration defines the physical system.
+
+The MQTT/protocol layer defines the data source.
+
+The backend defines the canonical operational state.
+
+The frontend defines the digital representation.
+
+The PLC/BMS remains the physical control authority.
+
+Everything must connect cleanly across those boundaries.
+
+One additional instruction I strongly recommend adding to Antigravity
+
+At the very beginning, before it writes implementation code, make it produce an internal Architecture & Implementation Audit containing:
+
+Current repository structure
+Existing technologies
+Stitch screens/components discovered
+Proposed domain model
+Proposed database model
+MQTT contract
+WebSocket contract
+Simulator architecture
+Frontend component architecture
+Backend module architecture
+Configuration strategy
+Security model
+Testing strategy
+Missing information that must come from the HVAC engineer
+Risks/assumptions
+
+Then it should implement from that architecture.
+
+That one step will greatly reduce the chance that Antigravity sees the beautiful Stitch screens and starts hard-coding the screenshots into React, which is exactly what you don't want.
+
+The key idea is: your Stitch design is the skin and interaction language; the actual HVAC plant is a dynamically loaded digital-twin model underneath it.

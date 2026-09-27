@@ -1,0 +1,15 @@
+Screen ID: SYSTEM_GRAPHIC_LIVE
+Name: Live System Schematic
+Primary user: Control Room Operator
+Purpose: Provide a real-time, visually-oriented representation of the physical HVAC system (Chiller, Air Handling Unit, and Room context) with live telemetry overlays.
+Entry points: Global Navigation (System Map), Operational Overview drill-down.
+Primary task: Monitor physical flow and mechanical state.
+Primary action: Hover/Select equipment for quick-stats.
+Secondary actions: Navigate to Equipment Detail, Acknowledge localized alarms.
+Critical information: Chilled water flow/temp, air duct pressures, fan status, room temperature/CO2.
+Secondary information: Damper positions, pump speeds.
+Required data: Real-time telemetry for all points identified in the reference diagram (Sensors T, H, DP, P, F, CO2).
+Important states: Normal, Fault (component-level highlighting), Offline (stale data styling).
+Permission constraints: View-only for general operators; control overlays for senior engineers.
+Responsive behavior: Scale schematic for tablet; scrollable viewport for mobile with sticky KPI summary.
+Related screens: Operational Overview, Equipment Detail (Chiller/AHU).

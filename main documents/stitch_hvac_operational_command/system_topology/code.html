@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HVAC Control - Topology View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Base typography enforcement */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #031427; /* Fallback for bg-background */
+        }
+        
+        /* Topology Connection Lines */
+        .topology-line-v {
+            width: 2px;
+            background-color: #334155; /* border-subtle */
+            margin: 0 auto;
+        }
+        .topology-line-h {
+            height: 2px;
+            background-color: #334155; /* border-subtle */
+            width: 100%;
+        }
+        
+        /* Scrollbar styling for a technical feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617; /* surface-well */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; /* border-subtle */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #45474c; /* outline-variant */
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "status-critical": "#EF4444",
+                    "on-primary-fixed-variant": "#3c475a",
+                    "surface": "#031427",
+                    "primary-fixed-dim": "#bcc7de",
+                    "on-error": "#690005",
+                    "on-error-container": "#ffdad6",
+                    "on-primary-container": "#8590a6",
+                    "surface-container-lowest": "#000f21",
+                    "tertiary": "#ddc39d",
+                    "inverse-primary": "#545f73",
+                    "status-healthy": "#22C55E",
+                    "secondary": "#bec6e0",
+                    "on-tertiary-container": "#a38c6a",
+                    "surface-container-highest": "#26364a",
+                    "surface-panel": "#0F172A",
+                    "background": "#031427",
+                    "error": "#ffb4ab",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "inverse-surface": "#d3e4fe",
+                    "status-manual": "#06B6D4",
+                    "on-surface": "#d3e4fe",
+                    "on-primary-fixed": "#111c2d",
+                    "on-secondary-fixed": "#131b2e",
+                    "tertiary-fixed": "#fadfb8",
+                    "primary-container": "#1e293b",
+                    "on-tertiary-fixed-variant": "#564427",
+                    "on-secondary-container": "#adb4ce",
+                    "status-stale": "#94A3B8",
+                    "on-tertiary": "#3e2e13",
+                    "surface-tint": "#bcc7de",
+                    "on-surface-variant": "#c5c6cd",
+                    "on-tertiary-fixed": "#271902",
+                    "on-primary": "#263143",
+                    "surface-container-high": "#1b2b3f",
+                    "status-warning": "#F59E0B",
+                    "outline": "#8f9097",
+                    "inverse-on-surface": "#213145",
+                    "on-secondary": "#283044",
+                    "error-container": "#93000a",
+                    "secondary-fixed": "#dae2fd",
+                    "primary": "#bcc7de",
+                    "surface-variant": "#26364a",
+                    "on-background": "#d3e4fe",
+                    "surface-well": "#020617",
+                    "surface-container": "#102034",
+                    "tertiary-fixed-dim": "#ddc39d",
+                    "border-subtle": "#334155",
+                    "surface-bright": "#2a3a4f",
+                    "surface-dim": "#031427",
+                    "primary-fixed": "#d8e3fb",
+                    "outline-variant": "#45474c",
+                    "secondary-container": "#3f465c",
+                    "tertiary-container": "#35260c",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "surface-container-low": "#0b1c30"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "unit": "4px",
+                    "panel-gap": "12px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "32px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "data-display-md": ["JetBrains Mono"],
+                    "data-mono-sm": ["JetBrains Mono"],
+                    "headline-sm": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-display-lg": ["JetBrains Mono"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "data-display-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "data-mono-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "data-display-lg": ["28px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden flex h-screen w-screen">
+<!-- Shared Component: SideNavBar -->
+<nav class="fixed left-0 top-0 h-screen w-64 bg-surface-panel border-r border-border-subtle flex flex-col py-gutter z-50 transition-all duration-200 ease-in-out hidden md:flex">
+<!-- Header -->
+<div class="px-gutter mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center border border-border-subtle overflow-hidden">
+<span class="material-symbols-outlined text-on-surface">engineering</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-on-surface truncate">System Control</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Facility A-12</p>
+</div>
+</div>
+<!-- Main Navigation Tabs -->
+<ul class="flex flex-col flex-1 px-unit gap-1 overflow-y-auto">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">domain</span>
+<span class="font-label-caps text-label-caps">Facility Overview</span>
+</a>
+</li>
+<!-- ACTIVE STATE LOGIC: Applied to System Map based on "Topology view" intent -->
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT bg-secondary-container text-on-secondary-container border-l-4 border-status-manual transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+<span class="font-label-caps text-label-caps">System Map</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings_input_component</span>
+<span class="font-label-caps text-label-caps">Panel List</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">precision_manufacturing</span>
+<span class="font-label-caps text-label-caps">Equipment Diagnostics</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">history</span>
+<span class="font-label-caps text-label-caps">Maintenance Logs</span>
+</a>
+</li>
+</ul>
+<!-- Footer Navigation -->
+<div class="mt-auto px-unit pt-4 border-t border-border-subtle">
+<ul class="flex flex-col gap-1">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-status-warning" style="font-variation-settings: 'FILL' 0;">warning</span>
+<span class="font-label-caps text-label-caps">Alert History</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area Wrapper (accounts for SideNav width) -->
+<div class="flex-1 flex flex-col md:ml-64 w-full h-full relative">
+<!-- Shared Component: TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin-desktop h-16 bg-background border-b border-border-subtle shrink-0 z-40">
+<!-- Brand Area -->
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">HVAC Control</span>
+</div>
+<!-- Actions Area (Search on right + Trailing Icons) -->
+<div class="flex items-center gap-6">
+<!-- Search Bar -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container border border-border-subtle rounded text-on-surface pl-9 pr-3 py-1.5 font-body-sm text-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64" placeholder="Search Node ID..." type="text"/>
+</div>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-2">
+<button aria-label="Connectivity Status" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined text-status-healthy" style="font-variation-settings: 'FILL' 1;">wifi</span>
+</button>
+<button aria-label="Notifications" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors scale-95 active:scale-90 duration-150 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-status-critical rounded-full border border-background"></span>
+</button>
+<button aria-label="Account Circle" class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors scale-95 active:scale-90 duration-150">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Canvas / Main Viewport -->
+<main class="flex-1 overflow-y-auto p-margin-desktop">
+<!-- Breadcrumb Navigation -->
+<div class="flex items-center gap-2 mb-8 font-label-caps text-label-caps text-on-surface-variant">
+<span>Facility A-12</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>System Map</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary">PLC-01 Core</span>
+</div>
+<!-- Top Section: Main PLC Metrics (Bento Style) -->
+<div class="grid grid-cols-12 gap-gutter mb-12">
+<!-- Primary Identity Card -->
+<div class="col-span-12 md:col-span-4 lg:col-span-3 bg-surface-panel border border-border-subtle rounded p-4 flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-1">PLC-01 Core</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Master Logic Controller</p>
+</div>
+<div class="px-2 py-1 bg-status-healthy/20 border border-status-healthy/50 rounded flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-healthy"></span>
+<span class="font-label-caps text-label-caps text-status-healthy">ONLINE</span>
+</div>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-1">FIRMWARE</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">v4.12.009</span>
+</div>
+</div>
+<!-- Metric: Comms Health -->
+<div class="col-span-12 md:col-span-4 lg:col-span-3 bg-surface-panel border border-border-subtle rounded p-4 flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">sync_alt</span>
+                        COMMS HEALTH
+                    </span>
+<div class="mt-4">
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">99.8</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">%</span>
+</div>
+<div class="w-full bg-surface-well h-1 mt-2 rounded overflow-hidden">
+<div class="bg-status-healthy h-full w-[99.8%]"></div>
+</div>
+</div>
+</div>
+<!-- Metric: Total Load -->
+<div class="col-span-12 md:col-span-4 lg:col-span-3 bg-surface-panel border border-border-subtle rounded p-4 flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+                        FACILITY LOAD
+                    </span>
+<div class="mt-4">
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">4,250</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">kW</span>
+</div>
+<p class="font-data-mono-sm text-data-mono-sm text-status-warning mt-1">↑ 12% vs avg</p>
+</div>
+</div>
+<!-- Metric: System Uptime -->
+<div class="col-span-12 md:col-span-12 lg:col-span-3 bg-surface-panel border border-border-subtle rounded p-4 flex flex-col justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">timer</span>
+                        SYSTEM UPTIME
+                    </span>
+<div class="mt-4">
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">142</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Days</span>
+</div>
+<p class="font-data-mono-sm text-data-mono-sm text-on-surface-variant mt-1">00:14:22:05 HH:MM</p>
+</div>
+</div>
+</div>
+<!-- Bottom Section: Sub-Panel Topology Tree -->
+<div class="relative w-full pb-12">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-on-surface-variant">hub</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Sub-Panel Connectivity</h3>
+</div>
+<!-- Tree Structure Container -->
+<div class="flex flex-col items-center">
+<!-- Root Node (Visual representation of connection point) -->
+<div class="w-16 h-8 bg-surface-container border border-border-subtle flex items-center justify-center rounded-t relative z-10">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">arrow_downward</span>
+</div>
+<!-- Trunk Line -->
+<div class="h-8 topology-line-v"></div>
+<!-- Horizontal Distribution Line -->
+<!-- Width calculation assumes specific grid sizing, using max-w-5xl as structural anchor -->
+<div class="w-full max-w-[90%] relative h-4">
+<div class="absolute top-0 left-0 right-0 topology-line-h"></div>
+<!-- Drop ticks (purely visual layout hints) -->
+<div class="flex justify-between w-full h-full px-[5%]">
+<div class="topology-line-v h-full"></div>
+<div class="topology-line-v h-full"></div>
+<div class="topology-line-v h-full"></div>
+<div class="topology-line-v h-full"></div>
+<div class="topology-line-v h-full"></div>
+<div class="topology-line-v h-full"></div>
+<div class="topology-line-v h-full"></div>
+</div>
+</div>
+<!-- Leaf Nodes (Sub-Panels) Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-panel-gap w-full mt-2">
+<!-- Node 1: Healthy -->
+<div class="bg-surface-well border border-border-subtle rounded flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-on-surface">SUB-01</span>
+<span class="w-2 h-2 rounded-full bg-status-healthy shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-on-surface">Chiller A</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">TEMP</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">42°F</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">PING</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">12ms</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 2: Healthy -->
+<div class="bg-surface-well border border-border-subtle rounded flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-on-surface">SUB-02</span>
+<span class="w-2 h-2 rounded-full bg-status-healthy shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-on-surface">Chiller B</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">TEMP</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">43°F</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">PING</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">11ms</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 3: Warning -->
+<div class="bg-surface-well border border-status-warning rounded flex flex-col relative group cursor-pointer shadow-[inset_0_2px_0_0_rgba(245,158,11,1)]">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-status-warning">SUB-03</span>
+<span class="material-symbols-outlined text-[16px] text-status-warning">warning</span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-on-surface">AHU-Roof</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div>
+<span class="font-label-caps text-label-caps text-status-warning text-[9px] block">TEMP</span>
+<span class="font-data-mono-sm text-data-mono-sm text-status-warning">HI 78°F</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">PING</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">15ms</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 4: Manual Override -->
+<div class="bg-surface-well border border-status-manual rounded flex flex-col relative group cursor-pointer">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-status-manual">SUB-04</span>
+<span class="material-symbols-outlined text-[16px] text-status-manual">back_hand</span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-on-surface">Boiler 1</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div class="col-span-2">
+<span class="font-label-caps text-label-caps text-status-manual text-[9px] block">STATE</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">LOCAL_OVR</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 5: Stale/Offline -->
+<div class="bg-surface-well border border-border-subtle rounded flex flex-col opacity-60 hover:opacity-100 transition-opacity cursor-pointer group">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-status-stale">SUB-05</span>
+<span class="material-symbols-outlined text-[16px] text-status-stale">cloud_off</span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-status-stale block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-status-stale">Boiler 2</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div class="col-span-2">
+<span class="font-label-caps text-label-caps text-status-stale text-[9px] block">COMMS</span>
+<span class="font-data-mono-sm text-data-mono-sm text-status-stale">ERR_TO</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 6: Healthy -->
+<div class="bg-surface-well border border-border-subtle rounded flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-on-surface">SUB-06</span>
+<span class="w-2 h-2 rounded-full bg-status-healthy shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-on-surface">Exhaust Fl 1</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">SPEED</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">60Hz</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">PING</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">9ms</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Node 7: Healthy -->
+<div class="bg-surface-well border border-border-subtle rounded flex flex-col hover:border-primary transition-colors cursor-pointer group">
+<div class="p-3 border-b border-border-subtle bg-surface-panel flex justify-between items-center rounded-t">
+<span class="font-label-caps text-label-caps text-on-surface">SUB-07</span>
+<span class="w-2 h-2 rounded-full bg-status-healthy shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+</div>
+<div class="p-3 flex flex-col gap-2 bg-surface-well">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block opacity-70">ZONE</span>
+<span class="font-body-sm text-body-sm text-on-surface">Exhaust Fl 2</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1 border-t border-border-subtle pt-2">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">SPEED</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">0Hz</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant text-[9px] block">PING</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">8ms</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Equipment Detail - Chiller A</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "status-critical": "#EF4444",
+                            "on-primary-fixed-variant": "#3c475a",
+                            "surface": "#031427",
+                            "primary-fixed-dim": "#bcc7de",
+                            "on-error": "#690005",
+                            "on-error-container": "#ffdad6",
+                            "on-primary-container": "#8590a6",
+                            "surface-container-lowest": "#000f21",
+                            "tertiary": "#ddc39d",
+                            "inverse-primary": "#545f73",
+                            "status-healthy": "#22C55E",
+                            "secondary": "#bec6e0",
+                            "on-tertiary-container": "#a38c6a",
+                            "surface-container-highest": "#26364a",
+                            "surface-panel": "#0F172A",
+                            "background": "#031427",
+                            "error": "#ffb4ab",
+                            "on-secondary-fixed-variant": "#3f465c",
+                            "inverse-surface": "#d3e4fe",
+                            "status-manual": "#06B6D4",
+                            "on-surface": "#d3e4fe",
+                            "on-primary-fixed": "#111c2d",
+                            "on-secondary-fixed": "#131b2e",
+                            "tertiary-fixed": "#fadfb8",
+                            "primary-container": "#1e293b",
+                            "on-tertiary-fixed-variant": "#564427",
+                            "on-secondary-container": "#adb4ce",
+                            "status-stale": "#94A3B8",
+                            "on-tertiary": "#3e2e13",
+                            "surface-tint": "#bcc7de",
+                            "on-surface-variant": "#c5c6cd",
+                            "on-tertiary-fixed": "#271902",
+                            "on-primary": "#263143",
+                            "surface-container-high": "#1b2b3f",
+                            "status-warning": "#F59E0B",
+                            "outline": "#8f9097",
+                            "inverse-on-surface": "#213145",
+                            "on-secondary": "#283044",
+                            "error-container": "#93000a",
+                            "secondary-fixed": "#dae2fd",
+                            "primary": "#bcc7de",
+                            "surface-variant": "#26364a",
+                            "on-background": "#d3e4fe",
+                            "surface-well": "#020617",
+                            "surface-container": "#102034",
+                            "tertiary-fixed-dim": "#ddc39d",
+                            "border-subtle": "#334155",
+                            "surface-bright": "#2a3a4f",
+                            "surface-dim": "#031427",
+                            "primary-fixed": "#d8e3fb",
+                            "outline-variant": "#45474c",
+                            "secondary-container": "#3f465c",
+                            "tertiary-container": "#35260c",
+                            "secondary-fixed-dim": "#bec6e0",
+                            "surface-container-low": "#0b1c30"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "gutter": "16px",
+                            "unit": "4px",
+                            "panel-gap": "12px",
+                            "margin-mobile": "16px",
+                            "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                            "body-lg": ["Inter"],
+                            "headline-lg": ["Inter"],
+                            "data-display-md": ["JetBrains Mono"],
+                            "data-mono-sm": ["JetBrains Mono"],
+                            "headline-sm": ["Inter"],
+                            "body-sm": ["Inter"],
+                            "label-caps": ["Inter"],
+                            "headline-md": ["Inter"],
+                            "data-display-lg": ["JetBrains Mono"],
+                            "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "data-display-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                            "data-mono-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                            "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                            "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                            "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                            "data-display-lg": ["28px", {"lineHeight": "32px", "fontWeight": "700"}],
+                            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #020617; /* surface-well fallback */
+            color: #d3e4fe;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        .bg-surface-well { background-color: #020617; }
+        
+        /* Grid system utilities */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 16px;
+        }
+        
+        /* Sparkline simple CSS implementation */
+        .sparkline {
+            stroke: #bcc7de;
+            fill: none;
+            stroke-width: 2;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+        .sparkline.critical { stroke: #EF4444; }
+        .sparkline.warning { stroke: #F59E0B; }
+        .sparkline.healthy { stroke: #22C55E; }
+        
+        /* Progress bar animation */
+        @keyframes pulse-opacity {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-slow {
+            animation: pulse-opacity 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-surface-well min-h-screen text-on-surface font-body-md flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-background border-b border-border-subtle dark:border-border-subtle flex justify-between items-center w-full px-margin-desktop h-16 shrink-0 z-50">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-primary cursor-pointer hover:text-on-surface transition-colors">menu</span>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface tracking-tight">HVAC Control</h1>
+</div>
+<div class="flex items-center gap-gutter">
+<nav class="hidden md:flex h-full">
+<a class="h-full flex items-center px-4 font-headline-sm text-headline-sm text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors" href="#">Dashboard</a>
+<a class="h-full flex items-center px-4 font-headline-sm text-headline-sm text-primary dark:text-primary border-b-2 border-primary hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors" href="#">Equipment</a>
+<a class="h-full flex items-center px-4 font-headline-sm text-headline-sm text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors" href="#">Alarms</a>
+</nav>
+<div class="flex items-center gap-unit ml-4">
+<button class="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="connectivity_status">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">wifi</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors relative" title="notifications">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-status-critical rounded-full border border-background"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded transition-colors" title="account_circle">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden xl:flex flex-col bg-surface-panel dark:bg-surface-panel border-r border-border-subtle dark:border-border-subtle w-64 h-full shrink-0">
+<div class="p-gutter border-b border-border-subtle">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center border border-border-subtle overflow-hidden">
+<img alt="Operator Profile" class="w-full h-full object-cover opacity-80" data-alt="A macro shot of a brushed aluminum industrial data plate with deep etched serial numbers, illuminated by harsh, cool, directional LED lighting, creating stark shadows in a dark modern industrial setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNjzU5cHIaXGDT-I5zuvgPXO3KRkRPD0cnKaNclc0GGBG6Kwap0sASjoLv5Sca7qOhfWrbnK3ZTkgBxjVfGt7bQpwIVDcQ8rek7DpLccUZCg746PvV5yOZ6Fi0WNV9yGxrd-98XcZGKCfOAWn90P3pj_QSv_8Tsoqw8gaWF3Ftsq1cSopvlgYQ9lPI9656OCglGB_yViT278Zk2nGneO9wOPoRwvGQi_ZnkHzdgUVfVdmtsrGLW03q"/>
+</div>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">System Control</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Facility A-12</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto py-unit">
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">domain</span>
+<span>Facility Overview</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">account_tree</span>
+<span>System Map</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">settings_input_component</span>
+<span>Panel List</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps bg-secondary-container dark:bg-secondary-container text-on-secondary-container dark:text-on-secondary-container border-l-4 border-status-manual transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">precision_manufacturing</span>
+<span>Equipment Diagnostics</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">history</span>
+<span>Maintenance Logs</span>
+</a>
+</nav>
+<div class="border-t border-border-subtle p-unit">
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">warning</span>
+<span>Alert History</span>
+</a>
+<a class="flex items-center gap-3 px-gutter py-3 font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop bg-surface-well">
+<!-- Breadcrumbs & Header -->
+<div class="mb-gutter flex flex-col gap-unit">
+<div class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#">Facility A-12</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Chiller Plant</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="font-bold text-on-surface cursor-default">Chiller A</span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface m-0">CHILLER A - 500T</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Trane CenTraVac Centrifugal Chiller | SN: L19K12345</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-status-healthy/20 border border-status-healthy text-status-healthy px-3 py-1 font-label-caps text-label-caps rounded flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-status-healthy animate-pulse-slow"></span>
+                            RUNNING - AUTO
+                        </div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="layout-grid grid-rows-[auto_auto_auto]">
+<!-- Telemetry KPI Strip (Spans full 12 cols, breaks to 6/3 on smaller screens) -->
+<div class="col-span-12 grid grid-cols-2 md:grid-cols-5 gap-gutter mb-panel-gap">
+<!-- KPI Card 1: Power -->
+<div class="bg-surface-panel border border-border-subtle rounded p-panel-gap flex flex-col justify-between">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR DRAW</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">electric_bolt</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">342.5</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">kW</span>
+</div>
+<div class="mt-2 h-6 w-full">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 20">
+<path class="sparkline healthy" d="M0,15 L10,12 L20,14 L30,10 L40,11 L50,8 L60,9 L70,5 L80,7 L90,3 L100,4"></path>
+</svg>
+</div>
+</div>
+<!-- KPI Card 2: Chilled Water Temp -->
+<div class="bg-surface-panel border border-border-subtle rounded p-panel-gap flex flex-col justify-between">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CHW LEAVING</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">ac_unit</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">42.1</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">°F</span>
+</div>
+<div class="mt-2 h-6 w-full">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 20">
+<path class="sparkline" d="M0,10 L20,10 L40,10 L60,11 L80,10 L100,10"></path>
+</svg>
+</div>
+</div>
+<!-- KPI Card 3: Condenser Flow -->
+<div class="bg-surface-panel border border-status-warning rounded p-panel-gap flex flex-col justify-between relative overflow-hidden">
+<div class="absolute top-0 right-0 w-0 h-0 border-t-[16px] border-r-[16px] border-t-status-warning border-r-transparent"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-status-warning">CDW FLOW</span>
+<span class="material-symbols-outlined text-status-warning text-sm">water_drop</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-status-warning">1150</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">GPM</span>
+</div>
+<div class="mt-2 h-6 w-full">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 20">
+<path class="sparkline warning" d="M0,5 L10,6 L20,8 L30,12 L40,15 L50,16 L60,18 L70,19 L80,18 L90,17 L100,18"></path>
+</svg>
+</div>
+<div class="mt-1 font-data-mono-sm text-data-mono-sm text-status-warning flex items-center gap-1">
+<span class="material-symbols-outlined text-[10px]">arrow_downward</span> DEVIATION -12%
+                        </div>
+</div>
+<!-- KPI Card 4: Compressor Amps -->
+<div class="bg-surface-panel border border-border-subtle rounded p-panel-gap flex flex-col justify-between">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">COMP AMPS</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">speed</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">412</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">A</span>
+</div>
+<div class="mt-2 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 78%"></div>
+</div>
+<div class="mt-1 flex justify-between font-data-mono-sm text-data-mono-sm text-on-surface-variant">
+<span>0</span>
+<span>RLA: 530</span>
+</div>
+</div>
+<!-- KPI Card 5: Evaporator Pressure -->
+<div class="bg-surface-panel border border-border-subtle rounded p-panel-gap flex flex-col justify-between md:col-span-1 col-span-2">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">EVAP PRESS</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">compress</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">36.2</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">PSIG</span>
+</div>
+<div class="mt-2 h-6 w-full">
+<svg class="w-full h-full preserve-aspect-ratio-none" viewbox="0 0 100 20">
+<path class="sparkline" d="M0,10 L10,10 L20,11 L30,9 L40,10 L50,10 L60,10 L70,10 L80,10 L90,10 L100,10"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Main Chart Area (Col 1-8) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-panel border border-border-subtle rounded flex flex-col min-h-[400px]">
+<div class="p-gutter border-b border-border-subtle flex justify-between items-center bg-surface-container-low rounded-t">
+<h3 class="font-headline-sm text-headline-sm text-on-surface m-0 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">insights</span>
+                            Performance Trend (24h)
+                        </h3>
+<div class="flex gap-2">
+<button class="px-2 py-1 font-label-caps text-label-caps bg-surface-container border border-border-subtle rounded text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors">1H</button>
+<button class="px-2 py-1 font-label-caps text-label-caps bg-secondary-container border border-secondary-container rounded text-on-secondary-container">24H</button>
+<button class="px-2 py-1 font-label-caps text-label-caps bg-surface-container border border-border-subtle rounded text-on-surface-variant hover:text-on-surface hover:border-outline transition-colors">7D</button>
+</div>
+</div>
+<div class="p-gutter flex-1 relative">
+<!-- Legend -->
+<div class="flex gap-4 mb-4">
+<div class="flex items-center gap-2 font-label-caps text-label-caps text-on-surface-variant">
+<span class="w-3 h-1 bg-primary"></span> Power (kW)
+                            </div>
+<div class="flex items-center gap-2 font-label-caps text-label-caps text-on-surface-variant">
+<span class="w-3 h-1 bg-tertiary"></span> CHW Temp (°F)
+                            </div>
+</div>
+<!-- Chart Placeholder (Mocked with grid lines and SVG path for layout) -->
+<div class="absolute inset-0 top-16 left-gutter right-gutter bottom-gutter border-l border-b border-border-subtle">
+<!-- Grid lines -->
+<div class="absolute w-full h-1/4 border-t border-border-subtle/30 bottom-1/4"></div>
+<div class="absolute w-full h-1/4 border-t border-border-subtle/30 bottom-2/4"></div>
+<div class="absolute w-full h-1/4 border-t border-border-subtle/30 bottom-3/4"></div>
+<!-- SVG Chart Path Mock -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 1000 300">
+<path class="opacity-80" d="M0,250 C100,240 200,280 300,220 C400,160 500,100 600,120 C700,140 800,90 900,110 L1000,100" fill="none" stroke="#bcc7de" stroke-width="2"></path>
+<path class="opacity-80" d="M0,180 C100,185 200,175 300,180 C400,190 500,210 600,200 C700,190 800,195 900,180 L1000,185" fill="none" stroke="#ddc39d" stroke-dasharray="4,4" stroke-width="2"></path>
+</svg>
+<!-- Axis Labels -->
+<div class="absolute -left-8 top-0 font-data-mono-sm text-data-mono-sm text-on-surface-variant">500</div>
+<div class="absolute -left-8 bottom-0 font-data-mono-sm text-data-mono-sm text-on-surface-variant">0</div>
+<div class="absolute right-0 -bottom-6 font-data-mono-sm text-data-mono-sm text-on-surface-variant">NOW</div>
+<div class="absolute left-0 -bottom-6 font-data-mono-sm text-data-mono-sm text-on-surface-variant">-24H</div>
+</div>
+</div>
+</div>
+<!-- Control & Command Panel (Col 9-12) -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-panel-gap">
+<!-- Safety Control Panel -->
+<div class="bg-surface-panel border border-border-subtle rounded flex flex-col">
+<div class="p-gutter border-b border-border-subtle bg-surface-container-low rounded-t">
+<h3 class="font-headline-sm text-headline-sm text-on-surface m-0 flex items-center gap-2">
+<span class="material-symbols-outlined text-status-manual text-lg">tune</span>
+                                Command Control
+                            </h3>
+</div>
+<div class="p-gutter flex flex-col gap-4">
+<!-- Mode Selection -->
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-2">OPERATIONAL MODE</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="bg-surface-container border border-border-subtle hover:border-outline text-on-surface font-label-caps text-label-caps py-2 rounded transition-colors text-center">MANUAL</button>
+<button class="bg-secondary-container border border-secondary-container text-on-secondary-container font-label-caps text-label-caps py-2 rounded text-center relative overflow-hidden">
+                                        AUTO
+                                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary"></span>
+</button>
+<button class="bg-surface-container border border-border-subtle hover:border-status-critical/50 text-on-surface hover:text-status-critical font-label-caps text-label-caps py-2 rounded transition-colors text-center">OFF</button>
+</div>
+</div>
+<!-- Setpoint Adjustment -->
+<div class="bg-surface-container-lowest p-3 rounded border border-border-subtle">
+<label class="font-label-caps text-label-caps text-on-surface-variant block mb-2">CHW LEAVING SETPOINT</label>
+<div class="flex items-center gap-3">
+<input class="bg-surface-panel border border-border-subtle text-on-surface font-data-display-md text-data-display-md p-2 rounded w-24 text-right focus:outline-none focus:border-status-manual focus:ring-1 focus:ring-status-manual" readonly="" type="number" value="42.0"/>
+<span class="font-body-md text-body-md text-on-surface-variant">°F</span>
+<div class="flex-1 flex justify-end gap-2">
+<button class="w-10 h-10 bg-surface-container border border-border-subtle rounded flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<button class="w-10 h-10 bg-surface-container border border-border-subtle rounded flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Safety Action Button -->
+<button class="w-full bg-status-critical/10 border border-status-critical text-status-critical font-label-caps text-label-caps py-3 rounded hover:bg-status-critical hover:text-background transition-colors flex items-center justify-center gap-2 mt-2">
+<span class="material-symbols-outlined text-sm">emergency</span>
+                                EMERGENCY STOP
+                            </button>
+</div>
+</div>
+<!-- Tech Specs Sidebar -->
+<div class="bg-surface-panel border border-border-subtle rounded flex-1 flex flex-col">
+<div class="p-gutter border-b border-border-subtle bg-surface-container-low rounded-t">
+<h3 class="font-headline-sm text-headline-sm text-on-surface m-0 flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">description</span>
+                                Equipment Specs
+                            </h3>
+</div>
+<div class="p-0 overflow-hidden flex-1">
+<table class="w-full text-left border-collapse">
+<tbody class="font-data-mono-sm text-data-mono-sm text-on-surface">
+<tr class="border-b border-border-subtle/50 hover:bg-surface-container-lowest transition-colors">
+<td class="p-3 text-on-surface-variant">Refrigerant</td>
+<td class="p-3 text-right">R-1233zd(E)</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-surface-container-lowest transition-colors bg-surface-container-lowest/30">
+<td class="p-3 text-on-surface-variant">Capacity</td>
+<td class="p-3 text-right">500 Tons</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-surface-container-lowest transition-colors">
+<td class="p-3 text-on-surface-variant">Rated kW/Ton</td>
+<td class="p-3 text-right">0.54</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-surface-container-lowest transition-colors bg-surface-container-lowest/30">
+<td class="p-3 text-on-surface-variant">Compressor Type</td>
+<td class="p-3 text-right">Centrifugal</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="p-3 text-on-surface-variant">Last Serviced</td>
+<td class="p-3 text-right text-status-healthy">2023-10-15</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Alarm History Table (Spans full width at bottom) -->
+<div class="col-span-12 mt-panel-gap bg-surface-panel border border-border-subtle rounded overflow-hidden">
+<div class="p-gutter border-b border-border-subtle bg-surface-container-low flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface m-0 flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-lg">history</span>
+                            Recent Alarms (Chiller A)
+                        </h3>
+<button class="font-label-caps text-label-caps text-primary hover:text-primary-fixed transition-colors">VIEW ALL</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="border-b border-border-subtle bg-surface-container-lowest">
+<th class="p-3 font-label-caps text-label-caps text-on-surface-variant w-32">TIMESTAMP</th>
+<th class="p-3 font-label-caps text-label-caps text-on-surface-variant w-24">SEVERITY</th>
+<th class="p-3 font-label-caps text-label-caps text-on-surface-variant">DESCRIPTION</th>
+<th class="p-3 font-label-caps text-label-caps text-on-surface-variant w-32">POINT</th>
+<th class="p-3 font-label-caps text-label-caps text-on-surface-variant w-32 text-right">STATUS</th>
+</tr>
+</thead>
+<tbody class="font-data-mono-sm text-data-mono-sm text-on-surface">
+<!-- Row 1 (Warning) -->
+<tr class="border-b border-border-subtle hover:bg-surface-container transition-colors">
+<td class="p-3">08:14:22</td>
+<td class="p-3">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-status-warning/20 text-status-warning border border-status-warning/30 font-label-caps">WARN</span>
+</td>
+<td class="p-3">Condenser Water Flow Low Deviation (-12%)</td>
+<td class="p-3 text-on-surface-variant">CHL_A_CDW_FLW</td>
+<td class="p-3 text-right">
+<span class="text-status-warning">ACTIVE</span>
+</td>
+</tr>
+<!-- Row 2 (Critical - Acknowledged) -->
+<tr class="border-b border-border-subtle hover:bg-surface-container transition-colors bg-surface-container-lowest/30">
+<td class="p-3 text-on-surface-variant">Yesterday</td>
+<td class="p-3">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-status-critical/20 text-status-critical border border-status-critical/30 font-label-caps">CRIT</span>
+</td>
+<td class="p-3 text-on-surface-variant">Surge Detected - RPM Reduced</td>
+<td class="p-3 text-on-surface-variant">CHL_A_COMP_VFD</td>
+<td class="p-3 text-right">
+<span class="text-on-surface-variant">ACKED (JM)</span>
+</td>
+</tr>
+<!-- Row 3 (Info - Cleared) -->
+<tr class="hover:bg-surface-container transition-colors">
+<td class="p-3 text-on-surface-variant">2023-10-24</td>
+<td class="p-3">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded bg-surface-container-highest text-on-surface border border-outline-variant font-label-caps">INFO</span>
+</td>
+<td class="p-3 text-on-surface-variant">Routine Oil Pump Cycle Complete</td>
+<td class="p-3 text-on-surface-variant">CHL_A_OIL_PMP</td>
+<td class="p-3 text-right">
+<span class="text-status-healthy">CLEARED</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

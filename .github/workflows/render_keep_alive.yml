@@ -1,0 +1,30 @@
+name: Render Keep-Alive Heartbeat
+
+on:
+  schedule:
+    # Runs every 10 minutes to prevent Render free-tier instance from sleeping (spins down after 15m)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend Health Endpoint
+        env:
+          # If secret RENDER_URL is set in repo settings, use it; otherwise use default onrender domain
+          BACKEND_URL: ${{ secrets.RENDER_BACKEND_URL || 'https://hvac-digital-twin-backend.onrender.com' }}
+        run: |
+          echo "Pinging Render backend at: $BACKEND_URL/health"
+          RESPONSE=$(curl -s -w "\n%{http_code}" "$BACKEND_URL/health" || true)
+          HTTP_BODY=$(echo "$RESPONSE" | head -n -1)
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n 1)
+          
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Response Body: $HTTP_BODY"
+          
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Success: Render backend is awake and healthy!"
+          else
+            echo "Warning: Response status was $HTTP_STATUS. Service may still be spinning up."
+          fi

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HVAC Kinetic Operational Interface - Facility Overview</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#263143",
+                      "surface-container-lowest": "#000f21",
+                      "on-primary-container": "#8590a6",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary-fixed": "#131b2e",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "primary": "#bcc7de",
+                      "surface-tint": "#bcc7de",
+                      "inverse-surface": "#d3e4fe",
+                      "primary-fixed-dim": "#bcc7de",
+                      "surface-panel": "#0F172A",
+                      "primary-fixed": "#d8e3fb",
+                      "on-secondary-container": "#adb4ce",
+                      "status-critical": "#EF4444",
+                      "surface-container": "#102034",
+                      "error-container": "#93000a",
+                      "inverse-primary": "#545f73",
+                      "on-secondary": "#283044",
+                      "on-surface-variant": "#c5c6cd",
+                      "status-warning": "#F59E0B",
+                      "surface-well": "#020617",
+                      "on-error": "#690005",
+                      "status-stale": "#94A3B8",
+                      "secondary-fixed": "#dae2fd",
+                      "inverse-on-surface": "#213145",
+                      "status-manual": "#06B6D4",
+                      "on-surface": "#d3e4fe",
+                      "tertiary-container": "#35260c",
+                      "secondary-container": "#3f465c",
+                      "error": "#ffb4ab",
+                      "primary-container": "#1e293b",
+                      "on-tertiary": "#3e2e13",
+                      "surface-container-high": "#1b2b3f",
+                      "background": "#031427",
+                      "surface-container-low": "#0b1c30",
+                      "on-background": "#d3e4fe",
+                      "surface-dim": "#031427",
+                      "on-tertiary-fixed-variant": "#564427",
+                      "surface-bright": "#2a3a4f",
+                      "status-healthy": "#22C55E",
+                      "surface-variant": "#26364a",
+                      "outline": "#8f9097",
+                      "tertiary-fixed-dim": "#ddc39d",
+                      "on-tertiary-fixed": "#271902",
+                      "on-tertiary-container": "#a38c6a",
+                      "on-primary-fixed": "#111c2d",
+                      "on-primary-fixed-variant": "#3c475a",
+                      "border-subtle": "#334155",
+                      "tertiary": "#ddc39d",
+                      "outline-variant": "#45474c",
+                      "tertiary-fixed": "#fadfb8",
+                      "secondary": "#bec6e0",
+                      "surface": "#031427",
+                      "surface-container-highest": "#26364a",
+                      "secondary-fixed-dim": "#bec6e0"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "margin-desktop": "32px",
+                      "panel-gap": "12px",
+                      "unit": "4px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "data-display-lg": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "data-mono-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "data-display-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "data-display-lg": [
+                              "28px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-mono-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-display-md": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-panel dark:bg-surface-panel text-primary dark:text-primary fixed left-0 top-0 h-screen flex flex-col py-gutter border-r border-border-subtle dark:border-border-subtle z-50 w-64">
+<div class="px-gutter mb-8">
+<h1 class="font-headline-sm text-headline-sm text-on-surface">System Control</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Facility A-12</p>
+</div>
+<ul class="flex flex-col gap-unit flex-grow px-unit">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT bg-secondary-container dark:bg-secondary-container text-on-secondary-container dark:text-on-secondary-container border-l-4 border-status-manual transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="domain" data-weight="fill" style="font-variation-settings: 'FILL' 1;">domain</span>
+                    Facility Overview
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_tree">account_tree</span>
+                    System Map
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings_input_component">settings_input_component</span>
+                    Panel List
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="precision_manufacturing">precision_manufacturing</span>
+                    Equipment Diagnostics
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+                    Maintenance Logs
+                </a>
+</li>
+</ul>
+<div class="mt-auto px-unit pt-4 border-t border-border-subtle">
+<ul class="flex flex-col gap-unit">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="warning">warning</span>
+                        Alert History
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container transition-all duration-200 ease-in-out font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+<div class="mt-4 px-3 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0 border border-border-subtle">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">person</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-caps text-label-caps text-on-surface truncate">Operator Profile</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex flex-col flex-1 ml-64 min-h-screen bg-surface-well">
+<!-- TopAppBar -->
+<header class="bg-background dark:bg-background flex justify-between items-center w-full px-margin-desktop h-16 border-b border-border-subtle dark:border-border-subtle z-40 sticky top-0 shrink-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-surface tracking-tight">HVAC Control</span>
+</div>
+<div class="flex items-center gap-4 ml-auto">
+<div class="hidden md:flex items-center bg-surface-container-low border border-border-subtle rounded-DEFAULT px-3 py-1.5 focus-within:border-status-manual transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2">search</span>
+<input class="bg-transparent border-none text-body-sm focus:ring-0 text-on-surface placeholder-on-surface-variant w-48 outline-none" placeholder="Search entity ID..." type="text"/>
+</div>
+<button class="p-2 rounded-full text-primary dark:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors scale-95 active:scale-90 duration-150 flex items-center justify-center relative">
+<span class="material-symbols-outlined" data-icon="connectivity_status">wifi</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-status-healthy rounded-full"></span>
+</button>
+<button class="p-2 rounded-full text-primary dark:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors scale-95 active:scale-90 duration-150 flex items-center justify-center relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-1.5 w-2 h-2 bg-status-warning rounded-full"></span>
+</button>
+<button class="p-2 rounded-full text-primary dark:text-primary hover:bg-surface-container-high dark:hover:bg-surface-container-high transition-colors scale-95 active:scale-90 duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<main class="flex-1 overflow-y-auto p-gutter md:p-margin-desktop flex flex-col gap-6">
+<!-- Global Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border-subtle pb-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SITE A-12</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">chevron_right</span>
+<span class="font-label-caps text-label-caps text-primary font-bold">PRIMARY DATA CENTER</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Operational Overview</h2>
+</div>
+<div class="flex items-center gap-4 bg-surface-panel border border-border-subtle rounded-DEFAULT px-4 py-2">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-status-healthy animate-pulse"></div>
+<span class="font-label-caps text-label-caps text-status-healthy uppercase tracking-wider">SYSTEM HEALTHY</span>
+</div>
+<div class="w-px h-4 bg-border-subtle"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">update</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface-variant">LIVE: &lt; 2s</span>
+</div>
+</div>
+</div>
+<!-- Content Grid Layout -->
+<div class="flex flex-col xl:flex-row gap-6 h-full">
+<!-- Primary Telemetry (Left/Top) -->
+<div class="w-full xl:w-1/3 flex flex-col gap-6">
+<!-- Main PLC Health Card -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-6 shadow-sm flex flex-col h-full relative overflow-hidden group">
+<!-- Technical accent line -->
+<div class="absolute top-0 left-0 w-full h-1 bg-primary/20">
+<div class="h-full bg-primary w-1/3"></div>
+</div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-1">MASTER CONTROLLER</h3>
+<div class="font-headline-md text-headline-md text-on-surface">PLC-01 CORE</div>
+</div>
+<div class="bg-status-healthy/10 border border-status-healthy text-status-healthy px-2 py-1 rounded-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span class="font-label-caps text-label-caps">ONLINE</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6 flex-grow">
+<div class="bg-surface-container-low p-4 rounded-sm border border-border-subtle/50">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">ACTIVE LOAD</span>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">482.5</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">kW</span>
+</div>
+<div class="mt-2 h-1 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[65%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-sm border border-border-subtle/50">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">PRI VOLTAGE</span>
+<div class="flex items-baseline gap-1">
+<span class="font-data-display-lg text-data-display-lg text-on-surface">480.1</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">V</span>
+</div>
+<div class="mt-2 h-1 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-status-healthy w-[98%]"></div>
+</div>
+</div>
+</div>
+<div class="border-t border-border-subtle pt-4 mt-auto">
+<div class="flex justify-between items-center text-on-surface-variant">
+<span class="font-label-caps text-label-caps">UPTIME: 1,420h</span>
+<button class="text-primary hover:text-primary-fixed-dim transition-colors font-label-caps text-label-caps flex items-center gap-1">
+                                    DETAILS <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Alarm Triage Strip -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-4 flex flex-col gap-3">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">ACTIVE ALARMS (3)</h3>
+<button class="text-primary text-[12px] font-semibold hover:underline">VIEW ALL</button>
+</div>
+<!-- Alarm Item 1 (Warning) -->
+<div class="flex items-start gap-3 p-3 bg-surface-container-low border-l-2 border-status-warning rounded-r-sm">
+<span class="material-symbols-outlined text-status-warning mt-0.5 text-[18px]">warning</span>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-on-surface truncate">PNL-03 OVERCURR</span>
+<span class="font-data-mono-sm text-[10px] text-on-surface-variant ml-2 shrink-0">10:42:15</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant truncate">Phase B current exceeds nominal threshold by 12%.</p>
+</div>
+</div>
+<!-- Alarm Item 2 (Healthy/Info) -->
+<div class="flex items-start gap-3 p-3 bg-surface-container-low border-l-2 border-primary rounded-r-sm">
+<span class="material-symbols-outlined text-primary mt-0.5 text-[18px]">info</span>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-on-surface truncate">PNL-06 COMMS DROP</span>
+<span class="font-data-mono-sm text-[10px] text-on-surface-variant ml-2 shrink-0">10:38:02</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant truncate">Telemetry heartbeat missed. Data marked stale.</p>
+</div>
+</div>
+<!-- Alarm Item 3 (Info) -->
+<div class="flex items-start gap-3 p-3 bg-surface-container-low border-l-2 border-primary rounded-r-sm">
+<span class="material-symbols-outlined text-primary mt-0.5 text-[18px]">info</span>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-1">
+<span class="font-data-mono-sm text-data-mono-sm font-bold text-on-surface truncate">SYS-01 SCHED MAINT</span>
+<span class="font-data-mono-sm text-[10px] text-on-surface-variant ml-2 shrink-0">08:00:00</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant truncate">Routine filter replacement logged.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Sub-Panel Grid (Right/Bottom) -->
+<div class="w-full xl:w-2/3">
+<div class="flex items-center justify-between mb-4 border-b border-border-subtle pb-2">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">SUB-PANEL TELEMETRY (7)</h3>
+<div class="flex gap-2">
+<span class="w-2 h-2 rounded-full bg-status-healthy mt-1"></span>
+<span class="w-2 h-2 rounded-full bg-status-warning mt-1"></span>
+<span class="w-2 h-2 rounded-full bg-status-stale mt-1"></span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-4 gap-4">
+<!-- Panel 1: Healthy -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-4 hover:border-outline transition-colors cursor-pointer group flex flex-col">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-on-surface-variant mb-0.5">PNL-01</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">HVAC North</div>
+</div>
+<div class="bg-status-healthy/10 border border-status-healthy text-status-healthy px-1.5 py-0.5 rounded-sm flex items-center">
+<span class="font-label-caps text-[10px]">OK</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">124.2</span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">480.0</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">59.6</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end">
+<span class="font-label-caps text-[10px] text-on-surface-variant">0 ALARMS</span>
+</div>
+</div>
+<!-- Panel 2: Healthy -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-4 hover:border-outline transition-colors cursor-pointer group flex flex-col">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-on-surface-variant mb-0.5">PNL-02</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">HVAC South</div>
+</div>
+<div class="bg-status-healthy/10 border border-status-healthy text-status-healthy px-1.5 py-0.5 rounded-sm flex items-center">
+<span class="font-label-caps text-[10px]">OK</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">118.5</span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">479.8</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">56.8</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end">
+<span class="font-label-caps text-[10px] text-on-surface-variant">0 ALARMS</span>
+</div>
+</div>
+<!-- Panel 3: Warning -->
+<div class="bg-surface-container border border-status-warning/50 rounded-DEFAULT p-4 hover:border-status-warning transition-colors cursor-pointer group flex flex-col relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-status-warning"></div>
+<div class="flex justify-between items-start mb-3 pl-2">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-status-warning mb-0.5">PNL-03</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Chiller A</div>
+</div>
+<div class="bg-status-warning/10 border border-status-warning text-status-warning px-1.5 py-0.5 rounded-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">warning</span>
+<span class="font-label-caps text-[10px]">WARN</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto pl-2">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-status-warning font-bold">185.4 <span class="text-[10px] font-normal align-top">↑</span></span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">478.2</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">88.6</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end pl-2">
+<span class="font-label-caps text-[10px] text-status-warning">1 ACTIVE</span>
+</div>
+</div>
+<!-- Panel 4: Healthy -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-4 hover:border-outline transition-colors cursor-pointer group flex flex-col">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-on-surface-variant mb-0.5">PNL-04</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Chiller B</div>
+</div>
+<div class="bg-status-healthy/10 border border-status-healthy text-status-healthy px-1.5 py-0.5 rounded-sm flex items-center">
+<span class="font-label-caps text-[10px]">OK</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">142.1</span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">480.1</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">68.2</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end">
+<span class="font-label-caps text-[10px] text-on-surface-variant">0 ALARMS</span>
+</div>
+</div>
+<!-- Panel 5: Healthy -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-4 hover:border-outline transition-colors cursor-pointer group flex flex-col">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-on-surface-variant mb-0.5">PNL-05</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Pump Station 1</div>
+</div>
+<div class="bg-status-healthy/10 border border-status-healthy text-status-healthy px-1.5 py-0.5 rounded-sm flex items-center">
+<span class="font-label-caps text-[10px]">OK</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">45.2</span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">480.3</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">21.7</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end">
+<span class="font-label-caps text-[10px] text-on-surface-variant">0 ALARMS</span>
+</div>
+</div>
+<!-- Panel 6: Stale -->
+<div class="bg-surface-panel/50 border border-border-subtle border-dashed rounded-DEFAULT p-4 cursor-not-allowed group flex flex-col relative opacity-70">
+<div class="absolute inset-0 bg-surface-well/10 pointer-events-none"></div>
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-status-stale mb-0.5">PNL-06</div>
+<div class="font-headline-sm text-headline-sm text-status-stale">Pump Station 2</div>
+</div>
+<div class="bg-surface-container-high border border-status-stale text-status-stale px-1.5 py-0.5 rounded-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">cloud_off</span>
+<span class="font-label-caps text-[10px]">STALE</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto grayscale">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-status-stale">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-status-stale line-through decoration-status-stale/50">42.1</span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-status-stale">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-status-stale line-through decoration-status-stale/50">480.0</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-status-stale">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-status-stale line-through decoration-status-stale/50">20.2</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end">
+<span class="font-label-caps text-[10px] text-status-stale">NO DATA</span>
+</div>
+</div>
+<!-- Panel 7: Healthy -->
+<div class="bg-surface-panel border border-border-subtle rounded-DEFAULT p-4 hover:border-outline transition-colors cursor-pointer group flex flex-col">
+<div class="flex justify-between items-start mb-3">
+<div>
+<div class="font-data-mono-sm text-data-mono-sm text-on-surface-variant mb-0.5">PNL-07</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Auxiliary Vent</div>
+</div>
+<div class="bg-status-healthy/10 border border-status-healthy text-status-healthy px-1.5 py-0.5 rounded-sm flex items-center">
+<span class="font-label-caps text-[10px]">OK</span>
+</div>
+</div>
+<div class="space-y-2 mt-auto">
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">CUR (A)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">15.4</span>
+</div>
+<div class="flex justify-between items-baseline border-b border-border-subtle/30 pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">VOL (V)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">120.5</span>
+</div>
+<div class="flex justify-between items-baseline pb-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PWR (kW)</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface">1.8</span>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-border-subtle/50 flex justify-end">
+<span class="font-label-caps text-[10px] text-on-surface-variant">0 ALARMS</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
