@@ -86,7 +86,7 @@ export function AlarmsDetailView({ systemState }: AlarmsDetailViewProps) {
               <button
                 key={sev}
                 onClick={() => setSeverityFilter(sev)}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`btn-press px-3 py-1 rounded-lg transition-all cursor-pointer ${
                   severityFilter === sev
                     ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
@@ -100,7 +100,7 @@ export function AlarmsDetailView({ systemState }: AlarmsDetailViewProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="text-[11px] text-slate-500 font-mono uppercase tracking-wider font-semibold mb-1">
             Active Alarms
           </div>
@@ -112,7 +112,7 @@ export function AlarmsDetailView({ systemState }: AlarmsDetailViewProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="text-[11px] text-slate-500 font-mono uppercase tracking-wider font-semibold mb-1">
             Critical Trips
           </div>
@@ -124,7 +124,7 @@ export function AlarmsDetailView({ systemState }: AlarmsDetailViewProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="text-[11px] text-slate-500 font-mono uppercase tracking-wider font-semibold mb-1">
             Warning Limits
           </div>
@@ -186,7 +186,7 @@ export function AlarmsDetailView({ systemState }: AlarmsDetailViewProps) {
                   {alarm.state !== 'ACKNOWLEDGED' && (
                     <button
                       onClick={() => handleAck(alarm.id)}
-                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-mono font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+                      className="btn-press px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-mono font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                     >
                       <Check className="w-3.5 h-3.5" />
                       <span>Acknowledge</span>
@@ -194,7 +194,7 @@ export function AlarmsDetailView({ systemState }: AlarmsDetailViewProps) {
                   )}
                   <button
                     onClick={() => handleClear(alarm.id)}
-                    className="p-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-colors cursor-pointer"
+                    className="btn-press p-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-colors cursor-pointer"
                     title="Clear Event"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

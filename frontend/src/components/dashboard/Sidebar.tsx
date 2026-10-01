@@ -171,11 +171,11 @@ export function Sidebar({
 
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 md:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 md:hidden animate-in fade-in duration-200"
           onClick={onClose}
         >
           <div 
-            className="w-72 bg-white border-r border-slate-200 h-full p-0 flex flex-col shadow-2xl"
+            className="w-72 bg-white border-r border-slate-200 h-full p-0 flex flex-col shadow-2xl animate-in slide-in-from-left duration-250 ease-out"
             onClick={(e) => e.stopPropagation()}
           >
             {sidebarContent}

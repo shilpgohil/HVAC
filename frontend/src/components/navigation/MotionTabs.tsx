@@ -38,17 +38,26 @@ export function MotionTabs({
 
   const activeTabMeta = tabs.find((t) => t.id === activeTab) || tabs[0];
 
-  useEffect(() => {
+  const updateIndicator = () => {
     if (!containerRef.current) return;
     const activeElement = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`);
     if (activeElement) {
       const containerRect = containerRef.current.getBoundingClientRect();
       const tabRect = activeElement.getBoundingClientRect();
       setIndicatorStyle({
-        left: tabRect.left - containerRect.left,
+        left: tabRect.left - containerRect.left + containerRef.current.scrollLeft,
         width: tabRect.width,
         opacity: 1,
       });
+    }
+  };
+
+  useEffect(() => {
+    updateIndicator();
+    if (!containerRef.current) return;
+    const activeElement = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`);
+    if (activeElement) {
+      activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
   }, [activeTab, tabs]);
 
@@ -73,7 +82,10 @@ export function MotionTabs({
         </div>
       )}
 
-      <div className="p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs relative overflow-x-auto select-none">
+      <div 
+        className="p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs relative overflow-x-auto select-none"
+        onScroll={updateIndicator}
+      >
         <div ref={containerRef} className="relative flex items-center gap-1 min-w-max">
           <div
             className="absolute top-0 bottom-0 my-auto h-[calc(100%-6px)] rounded-xl bg-white border border-slate-200/80 shadow-sm pointer-events-none"
@@ -94,7 +106,7 @@ export function MotionTabs({
                 key={tab.id}
                 data-tab-id={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`relative z-10 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-colors duration-150 focus:outline-none cursor-pointer ${
+                className={`btn-press relative z-10 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-colors duration-150 focus:outline-none cursor-pointer ${
                   isActive
                     ? 'text-slate-900 font-bold'
                     : 'text-slate-600 hover:text-slate-900 font-medium'

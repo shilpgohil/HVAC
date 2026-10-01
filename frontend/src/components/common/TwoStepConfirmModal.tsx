@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, ShieldCheck, X } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, X, ArrowRight } from 'lucide-react';
 
 interface TwoStepConfirmModalProps {
   isOpen: boolean;
@@ -130,7 +130,14 @@ export function TwoStepConfirmModal({
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div className="w-full text-center text-xs text-slate-500 pointer-events-none select-none font-mono tracking-wider uppercase font-semibold">
-                {sliderProgress > 80 ? 'Release to Confirm' : 'Slide to Confirm ➔'}
+                {sliderProgress > 80 ? (
+                  'Release to Confirm'
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 justify-center">
+                    <span>Slide to Confirm</span>
+                    <ArrowRight className="w-3.5 h-3.5 inline text-blue-600 animate-pulse" />
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -140,13 +147,13 @@ export function TwoStepConfirmModal({
             <div className="flex gap-2">
               <button
                 onClick={onCancel}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                className="btn-press px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={onConfirm}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold font-sans transition-colors cursor-pointer"
+                className="btn-press px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold font-sans transition-colors cursor-pointer shadow-sm shadow-blue-500/20"
               >
                 Authorize Now
               </button>

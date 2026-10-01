@@ -181,7 +181,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
         <div>
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
@@ -200,7 +200,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                   setControlMode('AUTO');
                   updateSystemMode('Auto').catch(() => {});
                 }}
-                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                className={`btn-press px-2 py-0.5 rounded transition-all cursor-pointer ${
                   controlMode === 'AUTO' ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80' : 'text-slate-500'
                 }`}
               >
@@ -211,7 +211,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                   setControlMode('MANUAL');
                   updateSystemMode('Manual').catch(() => {});
                 }}
-                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                className={`btn-press px-2 py-0.5 rounded transition-all cursor-pointer ${
                   controlMode === 'MANUAL' ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80' : 'text-slate-500'
                 }`}
               >
@@ -226,7 +226,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                 <span className="text-slate-500">Primary Power:</span>
                 <button
                   onClick={handleToggleAhu}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                  className={`btn-press px-3 py-1 rounded-full text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
                     currentAhuState === 'ON'
                       ? 'bg-emerald-500 text-white shadow-xs'
                       : 'bg-slate-200 text-slate-600 border border-slate-300'
@@ -296,7 +296,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
         <div>
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
@@ -312,13 +312,13 @@ export function ControlTables({ systemState }: ControlTablesProps) {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleAllOdus('ON')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors cursor-pointer"
+                className="btn-press px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors cursor-pointer"
               >
                 ALL ON
               </button>
               <button
                 onClick={() => handleAllOdus('OFF')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
+                className="btn-press px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
               >
                 ALL OFF
               </button>
@@ -349,7 +349,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                     <span className="text-[10px] text-slate-500">{isOn ? `${odu.fan_rpm} RPM` : '0 RPM'}</span>
                     <button
                       onClick={() => handleToggleOdu(odu.id, odu.state)}
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                      className={`btn-press px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                         isOn
                           ? 'bg-blue-600 text-white shadow-2xs'
                           : 'bg-slate-200 text-slate-600'
@@ -370,7 +370,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
+      <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
         <div>
           <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
@@ -386,13 +386,13 @@ export function ControlTables({ systemState }: ControlTablesProps) {
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleAllHeaters('ON')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors cursor-pointer"
+                className="btn-press px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors cursor-pointer"
               >
                 ALL ON
               </button>
               <button
                 onClick={() => handleAllHeaters('OFF')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
+                className="btn-press px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
               >
                 ALL OFF
               </button>
@@ -423,7 +423,7 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                     <span className="text-[10px] text-slate-500">{isOn ? `${htr.temp_c}°C` : '24°C'}</span>
                     <button
                       onClick={() => handleToggleHeater(htr.id, htr.state)}
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                      className={`btn-press px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                         isOn
                           ? 'bg-amber-500 text-white shadow-2xs'
                           : 'bg-slate-200 text-slate-600'

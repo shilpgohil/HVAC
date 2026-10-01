@@ -80,13 +80,13 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAll('ON')}
-            className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs font-mono transition-all shadow-xs active:scale-95 cursor-pointer"
+            className="btn-press px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs font-mono transition-all shadow-xs cursor-pointer"
           >
             All Stages ON
           </button>
           <button
             onClick={() => handleAll('OFF')}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs font-mono transition-all active:scale-95 cursor-pointer"
+            className="btn-press px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs font-mono transition-all cursor-pointer"
           >
             All Stages OFF
           </button>
@@ -94,7 +94,7 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>Reheat Duty</span>
             <Zap className="w-4 h-4 text-amber-600" />
@@ -107,7 +107,7 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>Phase Current</span>
             <Activity className="w-4 h-4 text-blue-600" />
@@ -120,7 +120,7 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>Element Core Temp</span>
             <Thermometer className="w-4 h-4 text-rose-600" />
@@ -133,7 +133,7 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+        <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>SCR Modulation</span>
             <Cpu className="w-4 h-4 text-emerald-600" />
@@ -155,7 +155,7 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
           return (
             <div 
               key={unit.id}
-              className={`rounded-2xl p-4 border transition-all duration-200 ${
+              className={`card-lift rounded-2xl p-4 border transition-all duration-200 ${
                 isRunning 
                   ? 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:border-amber-300' 
                   : 'bg-slate-50/70 border-slate-200/60 opacity-80'
@@ -169,7 +169,7 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
 
                 <button
                   onClick={() => handleToggle(unit.id, unit.state)}
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 active:scale-95 ${
+                  className={`btn-press px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
                     isRunning 
                       ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs' 
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'

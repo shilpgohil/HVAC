@@ -63,13 +63,13 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAll('ON')}
-            className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs font-mono transition-all shadow-xs active:scale-95 cursor-pointer"
+            className="btn-press px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs font-mono transition-all shadow-xs cursor-pointer"
           >
             All Inverters ON
           </button>
           <button
             onClick={() => handleAll('OFF')}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs font-mono transition-all active:scale-95 cursor-pointer"
+            className="btn-press px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs font-mono transition-all cursor-pointer"
           >
             All Inverters OFF
           </button>
@@ -84,7 +84,7 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
           return (
             <div 
               key={unit.id}
-              className={`rounded-2xl p-5 border transition-all duration-200 ${
+              className={`card-lift rounded-2xl p-5 border transition-all duration-200 ${
                 isRunning 
                   ? 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:border-slate-300' 
                   : 'bg-slate-50/70 border-slate-200/60 opacity-80'
@@ -107,7 +107,7 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
 
                 <button
                   onClick={() => handleToggle(unit.id, unit.state)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 active:scale-95 ${
+                  className={`btn-press px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
                     isRunning 
                       ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-2xs' 
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'

@@ -60,7 +60,7 @@ export function SettingsDetailView({ systemState }: SettingsDetailViewProps) {
 
         <button
           onClick={handleSave}
-          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs font-mono transition-all duration-200 cursor-pointer shadow-xs flex items-center gap-2 active:scale-95"
+          className="btn-press px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs font-mono transition-all duration-200 cursor-pointer shadow-xs flex items-center gap-2"
         >
           {savedSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
           <span>{savedSuccess ? 'CONFIG PERSISTED' : 'COMMIT THRESHOLDS'}</span>

@@ -303,7 +303,7 @@ export function RightPanel({ systemState }: RightPanelProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] space-y-3 hover:border-slate-300 transition-all">
+      <div className="card-lift bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] space-y-3 hover:border-slate-300 transition-all">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <Cpu className="w-4 h-4 text-blue-600" />
@@ -314,7 +314,7 @@ export function RightPanel({ systemState }: RightPanelProps) {
               <button
                 key={m}
                 onClick={() => handleModeChange(m)}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`btn-press px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   selectedMode === m
                     ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80'
                     : 'text-slate-600 hover:text-slate-900'
@@ -348,7 +348,7 @@ export function RightPanel({ systemState }: RightPanelProps) {
         <div className="pt-2">
           <button
             onClick={handleEmergencyStop}
-            className="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-mono font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+            className="btn-press w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-xs font-mono font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <PowerOff className="w-3.5 h-3.5 text-rose-600" />
             EMERGENCY CUTOUT

@@ -174,7 +174,7 @@ export function LivingBrandLogo({
               PRO
             </span>
           </div>
-          <span className="text-[11px] text-slate-500 font-medium">
+          <span className="text-[11px] text-slate-500 font-medium hidden sm:block">
             Supervisory Control Deck
           </span>
         </div>
