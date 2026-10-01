@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Fan, Snowflake, Flame, Thermometer } from 'lucide-react';
+import { Thermometer, Wind, Gauge, Zap, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
 import { SystemState } from '@/types/hvac';
 
 interface MetricCardsProps {
@@ -9,87 +9,171 @@ interface MetricCardsProps {
 }
 
 export function MetricCards({ systemState }: MetricCardsProps) {
-  const ahuOnline = systemState?.ahu?.state === 'ON';
-  const oduRunning = systemState?.odu_summary?.running ?? 5;
-  const oduTotal = systemState?.odu_summary?.total ?? 6;
-  const oduStandby = oduTotal - oduRunning;
-  
-  const heaterRunning = systemState?.heater_summary?.running ?? 8;
-  const heaterTotal = systemState?.heater_summary?.total ?? 8;
-  const heaterOff = heaterTotal - heaterRunning;
+  const supplyTemp = systemState?.temperatures?.supply_c ?? 18.2;
+  const currentTemp = systemState?.temperatures?.current_c ?? 24.4;
+  const setPoint = systemState?.temperatures?.set_point_c ?? 22.0;
+  const tempDeviation = currentTemp - setPoint;
 
-  const currentTemp = systemState?.temperatures?.current_c?.toFixed(1) ?? '24.4';
-  const setPoint = systemState?.temperatures?.set_point_c?.toFixed(1) ?? '22.0';
+  const airflowCfm = systemState?.ahu?.airflow_cfm ?? 14500;
+  const fanHz = systemState?.ahu?.fan_vfd_hz ?? 50.0;
+  const ductPressurePa = systemState?.ahu?.filter_dp_pa ?? 120.0;
 
-  const currentRh = systemState?.humidity?.current_rh?.toFixed(1) ?? '48.5';
-  const setPointRh = systemState?.humidity?.set_point_rh?.toFixed(1) ?? '50.0';
+  const roomPressurePa = 24.8;
+  const roomRh = systemState?.humidity?.current_rh ?? 48.5;
+
+  const totalPowerKw = systemState?.system_info?.total_power_kw ?? 132.8;
+  const copValue = (systemState?.odu_summary?.running ?? 5) > 0 ? 5.2 : 0.0;
+  const plantKwPerTon = 0.68;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* 1. AHU Card */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] flex items-center space-x-4 border-l-4 border-l-emerald-500">
-        <div className="w-13 h-13 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 shadow-xs">
-          <Fan className={`w-6 h-6 text-emerald-600 ${ahuOnline ? 'animate-fan' : ''}`} />
+      <div className="sapphire-card rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
+              <Thermometer className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                Supply Air Temp
+              </span>
+              <div className="text-[10px] text-slate-500 font-mono">AHU-01 Discharge</div>
+            </div>
+          </div>
+          <span
+            className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+              Math.abs(tempDeviation) <= 1.0
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+            }`}
+          >
+            {tempDeviation > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            Δ {tempDeviation > 0 ? '+' : ''}{tempDeviation.toFixed(1)}°C
+          </span>
         </div>
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold text-slate-600 uppercase tracking-wider">AHU Operating</div>
-          <div className="text-2xl font-bold font-mono-numbers text-slate-900 tracking-tight mt-0.5">
-            {ahuOnline ? '1 / 1' : '0 / 1'}
+
+        <div className="flex items-baseline justify-between">
+          <div className="text-2xl font-bold font-mono text-white tabular-nums">
+            {supplyTemp.toFixed(1)}
+            <span className="text-xs text-slate-400 font-sans ml-1 font-normal">°C</span>
           </div>
-          <div className="text-[11px] text-emerald-800 font-bold mt-1 flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{ahuOnline ? 'Online (VFD 50Hz)' : 'AHU Standby'}</span>
+          <div className="text-right font-mono">
+            <span className="text-[10px] text-slate-400 block">Setpoint</span>
+            <span className="text-xs text-cyan-400 font-bold">{setPoint.toFixed(1)}°C</span>
           </div>
+        </div>
+
+        <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <span>Room Temp: <span className="text-slate-200 font-semibold">{currentTemp.toFixed(1)}°C</span></span>
+          <span className="text-cyan-400/80">RH: {roomRh.toFixed(1)}%</span>
         </div>
       </div>
 
-      {/* 2. ODU Card */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] flex items-center space-x-4 border-l-4 border-l-sky-500">
-        <div className="w-13 h-13 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center shrink-0 shadow-xs">
-          <Snowflake className="w-6 h-6 text-sky-600" />
+      <div className="sapphire-card rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400">
+              <Wind className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                Airflow Delivery
+              </span>
+              <div className="text-[10px] text-slate-500 font-mono">Centrifugal Fan VFD</div>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-500/15 text-sky-400 border border-sky-500/30">
+            {fanHz.toFixed(1)} Hz
+          </span>
         </div>
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold text-slate-600 uppercase tracking-wider">ODU Inverters</div>
-          <div className="text-2xl font-bold font-mono-numbers text-slate-900 tracking-tight mt-0.5">
-            {oduRunning} / {oduTotal}
+
+        <div className="flex items-baseline justify-between">
+          <div className="text-2xl font-bold font-mono text-white tabular-nums">
+            {airflowCfm.toLocaleString('en-US')}
+            <span className="text-xs text-slate-400 font-sans ml-1 font-normal">CFM</span>
           </div>
-          <div className="text-[11px] text-sky-800 font-bold mt-1 font-mono-numbers">
-            {oduStandby > 0 ? `${oduStandby} Inverters Standby` : 'Full DX Capacity Active'}
+          <div className="text-right font-mono">
+            <span className="text-[10px] text-slate-400 block">Metric</span>
+            <span className="text-xs text-sky-400 font-bold">{Math.round(airflowCfm * 1.699)} m³/h</span>
           </div>
+        </div>
+
+        <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <span>Static DP: <span className="text-slate-200 font-semibold">{ductPressurePa.toFixed(0)} Pa</span></span>
+          <span className="text-emerald-400 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Laminar
+          </span>
         </div>
       </div>
 
-      {/* 3. Heater Card */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] flex items-center space-x-4 border-l-4 border-l-amber-500">
-        <div className="w-13 h-13 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 shadow-xs">
-          <Flame className="w-6 h-6 text-amber-600" />
+      <div className="sapphire-card rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+              <Gauge className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                Cleanroom Pressure
+              </span>
+              <div className="text-[10px] text-slate-500 font-mono">Suite 101 Cascade</div>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            ISO Class 7
+          </span>
         </div>
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold text-slate-600 uppercase tracking-wider">Electric Reheat Bank</div>
-          <div className="text-2xl font-bold font-mono-numbers text-slate-900 tracking-tight mt-0.5">
-            {heaterRunning} / {heaterTotal}
+
+        <div className="flex items-baseline justify-between">
+          <div className="text-2xl font-bold font-mono text-white tabular-nums">
+            +{roomPressurePa.toFixed(1)}
+            <span className="text-xs text-slate-400 font-sans ml-1 font-normal">Pa</span>
           </div>
-          <div className="text-[11px] text-amber-800 font-bold mt-1 font-mono-numbers">
-            {heaterOff > 0 ? `${heaterOff} Stages Standby` : '8 Stages Energized'}
+          <div className="text-right font-mono">
+            <span className="text-[10px] text-slate-400 block">Min Limit</span>
+            <span className="text-xs text-emerald-400 font-bold">+15.0 Pa</span>
           </div>
+        </div>
+
+        <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <span>Cascade Status: <span className="text-emerald-400 font-semibold">Positive</span></span>
+          <span className="text-slate-300">DP: 0.10 in.wc</span>
         </div>
       </div>
 
-      {/* 4. Temperature & RH Card */}
-      <div className="rounded-2xl p-5 bg-white border border-slate-300 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] flex items-center space-x-4 border-l-4 border-l-indigo-500">
-        <div className="w-13 h-13 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0 shadow-xs">
-          <Thermometer className="w-6 h-6 text-indigo-600" />
+      <div className="sapphire-card rounded-2xl p-5 border border-white/10 relative overflow-hidden group">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+              <Zap className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                Plant Power & COP
+              </span>
+              <div className="text-[10px] text-slate-500 font-mono">Total Consumption</div>
+            </div>
+          </div>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            COP {copValue.toFixed(1)}
+          </span>
         </div>
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold text-slate-600 uppercase tracking-wider">Air Temp &amp; RH</div>
-          <div className="text-2xl font-bold font-mono-numbers text-slate-900 tracking-tight mt-0.5 flex items-center space-x-2">
-            <span>{currentTemp}°C</span>
-            <span className="text-slate-400">·</span>
-            <span className="text-blue-700">{currentRh}%</span>
+
+        <div className="flex items-baseline justify-between">
+          <div className="text-2xl font-bold font-mono text-white tabular-nums">
+            {totalPowerKw.toFixed(1)}
+            <span className="text-xs text-slate-400 font-sans ml-1 font-normal">kW</span>
           </div>
-          <div className="text-[11px] text-slate-600 font-medium mt-1 font-mono-numbers">
-            Target: <span className="text-slate-900 font-bold">{setPoint}°C</span> · <span className="text-blue-800 font-bold">{setPointRh}%</span>
+          <div className="text-right font-mono">
+            <span className="text-[10px] text-slate-400 block">Efficiency</span>
+            <span className="text-xs text-amber-400 font-bold">{plantKwPerTon} kW/Ton</span>
           </div>
+        </div>
+
+        <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <span>ODU Inverters: <span className="text-slate-200 font-semibold">{systemState?.odu_summary?.running ?? 5}/6 Active</span></span>
+          <span className="text-cyan-400">8 HTR Active</span>
         </div>
       </div>
     </div>

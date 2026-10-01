@@ -6,6 +6,21 @@ from typing import Dict, Any, List, Optional
 class ThermodynamicSimulator:
     def __init__(self):
         self.tick_count: int = 0
+        self.active_scenario: int = 1
+        self.scenario_definitions: Dict[int, Dict[str, str]] = {
+            1: {"name": "Normal Operation", "desc": "All equipment healthy, PID loops tracking setpoints."},
+            2: {"name": "High Cooling Demand", "desc": "Simulated thermal load step change with peak cooling."},
+            3: {"name": "Supply Fan Failure", "desc": "Fan commanded RUN, differential pressure flow loss trip."},
+            4: {"name": "Refrigerant Circuit Loss", "desc": "Compressor lock-out and DX cooling loss alarm."},
+            5: {"name": "High Filter DP", "desc": "HEPA filter loading exceeds 250 Pa high differential pressure threshold."},
+            6: {"name": "Low Evaporator Flow", "desc": "Cooling coil minimum flow rate violation and capacity restriction."},
+            7: {"name": "High Supply Air Temp", "desc": "Supply air temperature exceeds high limit threshold (24°C)."},
+            8: {"name": "Sensor Open Circuit", "desc": "Discharge air temperature sensor open-circuit fault."},
+            9: {"name": "Gateway Offline", "desc": "Modbus/BACnet gateway offline with communication timeout."},
+            10: {"name": "Stale Telemetry", "desc": "Point telemetry age exceeds stale threshold (60s)."},
+            11: {"name": "Manual VFD Override", "desc": "Local manual VFD override active at 60 Hz."},
+            12: {"name": "Command Fail / Timeout", "desc": "Safety interlock lockout active preventing command execution."}
+        }
         
         self.ahu_state: str = "ON"
         self.ahu_airflow_cfm: float = 14500.0
@@ -82,6 +97,84 @@ class ThermodynamicSimulator:
                 "rh_pct": round(48.5 + variation * 1.5, 1),
                 "rh_setpoint_pct": 50.0
             })
+
+    def set_scenario(self, scenario_id: int) -> Dict[str, Any]:
+        if scenario_id in self.scenario_definitions:
+            self.active_scenario = scenario_id
+            if scenario_id == 1:
+                self.ahu_state = "ON"
+                self.fan_vfd_hz = 50.0
+                self.ahu_airflow_cfm = 14500.0
+                self.duct_dp_pa = 120.0
+                self.plc_connected = True
+                self.system_mode = "Auto"
+            elif scenario_id == 2:
+                self.set_point_c = 20.0
+                for o in self.odus:
+                    o["state"] = "ON"
+                    o["power_kw"] = 18.5
+                    o["fan_rpm"] = 830
+            elif scenario_id == 3:
+                self.ahu_state = "OFF"
+                self.fan_vfd_hz = 0.0
+                self.ahu_airflow_cfm = 0.0
+                self.duct_dp_pa = 0.0
+                self.alarms.append({
+                    "id": "ALM-FAN-FAIL",
+                    "component_code": "AHU-01",
+                    "severity": "CRITICAL",
+                    "state": "ACTIVE",
+                    "condition": "FAN_RUN_FAILURE",
+                    "message": "Supply Fan Run Failure / Flow Loss",
+                    "triggered_at": datetime.now().strftime("%d %b %Y %I:%M %p"),
+                    "acknowledged_by": None
+                })
+            elif scenario_id == 4:
+                self.alarms.append({
+                    "id": "ALM-REF-LOSS",
+                    "component_code": "DX-CIRCUIT-1",
+                    "severity": "CRITICAL",
+                    "state": "ACTIVE",
+                    "condition": "REFRIGERANT_LOSS",
+                    "message": "Refrigerant circuit pressure collapse",
+                    "triggered_at": datetime.now().strftime("%d %b %Y %I:%M %p"),
+                    "acknowledged_by": None
+                })
+            elif scenario_id == 5:
+                self.duct_dp_pa = 295.0
+                self.alarms.append({
+                    "id": "ALM-FILTER-DP",
+                    "component_code": "HEPA-01",
+                    "severity": "WARNING",
+                    "state": "ACTIVE",
+                    "condition": "HIGH_FILTER_DP",
+                    "message": "Air Filter Dirty / High DP (>250 Pa)",
+                    "triggered_at": datetime.now().strftime("%d %b %Y %I:%M %p"),
+                    "acknowledged_by": None
+                })
+            elif scenario_id == 7:
+                self.supply_temp_c = 24.5
+                self.alarms.append({
+                    "id": "ALM-HIGH-SUPPLY",
+                    "component_code": "AHU-01",
+                    "severity": "WARNING",
+                    "state": "ACTIVE",
+                    "condition": "HIGH_SUPPLY_TEMP",
+                    "message": "Supply Air Temp High (24.5°C > 22.0°C)",
+                    "triggered_at": datetime.now().strftime("%d %b %Y %I:%M %p"),
+                    "acknowledged_by": None
+                })
+            elif scenario_id == 9:
+                self.plc_connected = False
+            elif scenario_id == 11:
+                self.system_mode = "MANUAL"
+                self.fan_vfd_hz = 60.0
+            return {
+                "status": "SUCCESS",
+                "scenario_id": scenario_id,
+                "name": self.scenario_definitions[scenario_id]["name"]
+            }
+        return {"status": "ERROR", "message": "Unknown scenario ID"}
 
     def set_ahu_state(self, state: str) -> str:
         self.ahu_state = "ON" if state.upper() == "ON" else "OFF"

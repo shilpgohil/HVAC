@@ -36,7 +36,7 @@ export function MotionTabs({
     opacity: 0,
   });
 
-  const activeTabMeta = tabs.find(t => t.id === activeTab) || tabs[0];
+  const activeTabMeta = tabs.find((t) => t.id === activeTab) || tabs[0];
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -54,41 +54,38 @@ export function MotionTabs({
 
   return (
     <div className="space-y-3">
-      {/* 1. Staged Heading (Arise UI Narrative Stage) */}
       {showStagedHeader && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-1">
           <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-[11px] font-mono-numbers uppercase tracking-wider font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200/80">
-                {activeTabMeta?.category || 'Operational View'}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-md border border-cyan-500/20">
+                {activeTabMeta?.category || 'Operational Subsystem'}
               </span>
-              <span className="text-slate-300">/</span>
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+              <span className="text-slate-600">/</span>
+              <h2 className="text-lg font-bold text-white tracking-tight font-sans">
                 {title || activeTabMeta?.label}
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">
-              {subtitle || activeTabMeta?.description || 'Real-time telemetry and supervisory monitoring'}
+            <p className="text-xs text-slate-400 mt-1 font-mono">
+              {subtitle || activeTabMeta?.description || 'Real-time telemetry and supervisory control loop'}
             </p>
           </div>
         </div>
       )}
 
-      {/* 2. Fluid Pill Motion Tab Bar (Inspired by Arise UI MotionTabs) */}
-      <div className="p-1 rounded-2xl bg-white/90 border border-slate-200/80 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] backdrop-blur-md relative overflow-x-auto select-none">
-        <div ref={containerRef} className="relative flex items-center space-x-1 min-w-max">
-          {/* Animated Sliding Highlight Pill */}
+      <div className="p-1 rounded-2xl surface-panel border border-white/10 shadow-2xl relative overflow-x-auto select-none">
+        <div ref={containerRef} className="relative flex items-center gap-1 min-w-max">
           <div
-            className="absolute top-0 bottom-0 my-auto h-[calc(100%-4px)] rounded-xl bg-gradient-to-b from-sky-50 to-white border border-sky-200/90 shadow-[0_2px_8px_-1px_rgba(14,165,233,0.18)] transition-all duration-300 pointer-events-none"
+            className="absolute top-0 bottom-0 my-auto h-[calc(100%-6px)] rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/15 border border-cyan-500/40 shadow-[0_0_16px_rgba(6,182,212,0.25)] transition-all pointer-events-none"
             style={{
               left: `${indicatorStyle.left}px`,
               width: `${indicatorStyle.width}px`,
               opacity: indicatorStyle.opacity,
-              transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+              transitionDuration: '240ms',
+              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           />
 
-          {/* Tab Buttons */}
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -98,21 +95,21 @@ export function MotionTabs({
                 key={tab.id}
                 data-tab-id={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`relative z-10 flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-colors duration-200 focus:outline-none ${
+                className={`relative z-10 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-colors duration-150 focus:outline-none ${
                   isActive
-                    ? 'text-sky-950 font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50'
+                    ? 'text-cyan-300 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                 }`}
               >
                 <Icon
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    isActive ? 'text-sky-600 scale-105' : 'text-slate-400 group-hover:text-slate-600'
+                    isActive ? 'text-cyan-400 scale-110' : 'text-slate-500'
                   }`}
                 />
                 <span className="tracking-tight whitespace-nowrap">{tab.label}</span>
 
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full bg-rose-100 border border-rose-200 text-rose-700 text-[10px] font-bold font-mono-numbers">
+                  <span className="px-1.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-bold font-mono animate-pulse">
                     {tab.badge}
                   </span>
                 )}

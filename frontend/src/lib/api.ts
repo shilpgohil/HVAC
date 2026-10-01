@@ -110,3 +110,25 @@ export async function clearAlarm(alarmId: string): Promise<any> {
   if (!res.ok) throw new Error('Failed to clear alarm');
   return res.json();
 }
+
+export interface ScenarioItem {
+  scenario_id: number;
+  name: string;
+  description: string;
+  active: boolean;
+}
+
+export async function fetchScenarios(): Promise<ScenarioItem[]> {
+  const res = await fetch(`${API_BASE}/simulator/scenarios`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch scenarios');
+  return res.json();
+}
+
+export async function switchScenario(scenarioId: number): Promise<any> {
+  const res = await fetch(`${API_BASE}/simulator/scenarios/${scenarioId}`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error('Failed to activate scenario');
+  return res.json();
+}
+

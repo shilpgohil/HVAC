@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { TrendingUp, Droplets } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { TrendingUp, Droplets, Clock, Activity } from 'lucide-react';
 import { fetchTemperatureHistory, HistoryPoint } from '@/lib/api';
 
 interface TemperatureTrendGraphProps {
@@ -9,37 +9,37 @@ interface TemperatureTrendGraphProps {
 }
 
 export function TemperatureTrendGraph({ initialHistory }: TemperatureTrendGraphProps) {
-  const [timeRange, setTimeRange] = useState<'1H' | '6H' | '12H' | '24H'>('12H');
+  const [timeRange, setTimeRange] = useState<'15M' | '1H' | '6H' | '24H' | 'LIVE'>('1H');
   const [activeMetric, setActiveMetric] = useState<'temp' | 'rh'>('temp');
   const [data, setData] = useState<HistoryPoint[]>(initialHistory || []);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const loadHistory = useCallback(async (range: string) => {
     try {
-      const points = await fetchTemperatureHistory(range);
+      const apiRange = range === '15M' ? '1H' : (range === 'LIVE' ? '1H' : range);
+      const points = await fetchTemperatureHistory(apiRange);
       if (points && points.length > 0) {
         setData(points);
       }
-    } catch {
-      // fallback
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
     loadHistory(timeRange);
     const interval = setInterval(() => {
       loadHistory(timeRange);
-    }, 3000);
+    }, 2500);
     return () => clearInterval(interval);
   }, [timeRange, loadHistory]);
 
-  const minY = activeMetric === 'temp' ? 10 : 20;
-  const maxY = activeMetric === 'temp' ? 35 : 80;
+  const minY = activeMetric === 'temp' ? 12 : 30;
+  const maxY = activeMetric === 'temp' ? 32 : 75;
   const rangeY = maxY - minY;
-  const width = 800;
-  const height = 240;
-  const paddingX = 50;
-  const paddingY = 35;
+  const width = 850;
+  const height = 260;
+  const paddingX = 45;
+  const paddingY = 30;
   const innerW = width - paddingX * 2;
   const innerH = height - paddingY * 2;
 
@@ -53,181 +53,184 @@ export function TemperatureTrendGraph({ initialHistory }: TemperatureTrendGraphP
     return paddingX + (idx / (data.length - 1)) * innerW;
   };
 
-  // Temp Points
   const supplyPoints = data.map((d, i) => `${getX(i)},${getY(d.supply_c)}`).join(' ');
   const returnPoints = data.map((d, i) => `${getX(i)},${getY(d.return_c)}`).join(' ');
+  const roomPoints = data.map((d, i) => `${getX(i)},${getY(d.current_c)}`).join(' ');
   const currentSetPoint = data.length > 0 ? data[data.length - 1].set_point_c : 22.0;
   const setPointY = getY(currentSetPoint);
 
-  // RH Points
   const rhPoints = data.map((d, i) => `${getX(i)},${getY(d.rh_pct ?? 48.5)}`).join(' ');
   const currentRhSetPoint = data.length > 0 ? (data[data.length - 1].rh_setpoint_pct ?? 50.0) : 50.0;
   const rhSetPointY = getY(currentRhSetPoint);
 
-  // Comfort band (45% to 55% RH)
-  const rhComfortTop = getY(55);
-  const rhComfortBottom = getY(45);
-
   const yTicks = activeMetric === 'temp' 
-    ? [10, 15, 20, 25, 30, 35] 
-    : [20, 35, 50, 65, 80];
+    ? [12, 16, 20, 24, 28, 32] 
+    : [30, 40, 50, 60, 70];
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current || data.length === 0) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const scaleX = width / rect.width;
+    const svgX = mouseX * scaleX;
+    
+    if (svgX < paddingX || svgX > width - paddingX) {
+      setHoveredIdx(null);
+      return;
+    }
+    
+    const relativeX = (svgX - paddingX) / innerW;
+    const rawIdx = Math.round(relativeX * (data.length - 1));
+    const clampedIdx = Math.max(0, Math.min(data.length - 1, rawIdx));
+    setHoveredIdx(clampedIdx);
+  };
+
+  const hoveredData = hoveredIdx !== null ? data[hoveredIdx] : null;
 
   return (
-    <div className="rounded-3xl p-5 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)] border border-slate-200/80 bg-white/90 backdrop-blur-md flex flex-col transition-all duration-300 relative overflow-hidden">
-      {/* Header and Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600 shadow-2xs">
+    <div className="surface-panel rounded-2xl p-5 border border-white/10 shadow-2xl relative overflow-hidden flex flex-col">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-2 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
             {activeMetric === 'temp' ? <TrendingUp className="w-4 h-4" /> : <Droplets className="w-4 h-4" />}
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-slate-900 text-sm tracking-tight">
-                {activeMetric === 'temp' ? 'Temperature Telemetry' : 'Psychrometric Humidity (RH)'}
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-white text-sm tracking-tight font-sans">
+                {activeMetric === 'temp' ? 'Temperature Telemetry Spectrum' : 'Psychrometric Humidity (RH)'}
               </span>
-              <span className="text-[10px] text-slate-500 font-mono-numbers px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">
-                Live Sensor Stream
+              <span className="text-[10px] text-cyan-300 font-mono font-semibold px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30">
+                Real-Time Stream
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">
+            <div className="text-[11px] text-slate-400 font-mono mt-0.5">
               {activeMetric === 'temp' 
-                ? 'Supply & Return Air differential tracking with dynamic setpoint' 
-                : 'Cleanroom Relative Humidity with psychrometric dew point buffer'}
+                ? 'Supply (18.2°C) · Return (26.7°C) · Room (24.4°C) vs Setpoint (22.0°C)' 
+                : 'Cleanroom Relative Humidity with psychrometric tolerance band'}
             </div>
           </div>
         </div>
 
-        {/* Metric Selector Pill (Temp vs RH) */}
-        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs">
-          <button
-            onClick={() => setActiveMetric('temp')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1.5 ${
-              activeMetric === 'temp'
-                ? 'bg-white text-sky-950 shadow-xs border border-slate-200 font-bold'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <span>Temperature (°C)</span>
-          </button>
-          <button
-            onClick={() => setActiveMetric('rh')}
-            className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center space-x-1.5 ${
-              activeMetric === 'rh'
-                ? 'bg-white text-emerald-950 shadow-xs border border-slate-200 font-bold'
-                : 'text-slate-500 hover:text-slate-900'
-            }`}
-          >
-            <span>Humidity (% RH)</span>
-          </button>
-        </div>
-
-        {/* Legend */}
-        {activeMetric === 'temp' ? (
-          <div className="flex items-center space-x-4 text-xs">
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
-              <span className="text-slate-700 font-medium">Supply</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              <span className="text-slate-700 font-medium">Return</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-3.5 h-0.5 bg-blue-600 border-b border-dashed border-blue-600" />
-              <span className="text-slate-700 font-medium">Setpoint</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-4 text-xs">
-            <div className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
-              <span className="text-slate-700 font-medium">Actual RH %</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-3.5 h-0.5 bg-emerald-600 border-b border-dashed border-emerald-600" />
-              <span className="text-slate-700 font-medium">RH Target</span>
-            </div>
-            <div className="flex items-center space-x-1.5">
-              <span className="w-3 h-2 rounded bg-emerald-100 border border-emerald-300" />
-              <span className="text-slate-700 font-medium">Comfort (45-55%)</span>
-            </div>
-          </div>
-        )}
-
-        {/* Time Filter Pills */}
-        <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200/80 shadow-xs">
-          {(['1H', '6H', '12H', '24H'] as const).map((r) => (
+        <div className="flex items-center gap-2">
+          <div className="p-0.5 surface-well rounded-xl border border-white/10 flex items-center font-mono text-xs">
             <button
-              key={r}
-              onClick={() => {
-                setTimeRange(r);
-                loadHistory(r);
-              }}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                timeRange === r
-                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200'
-                  : 'text-slate-500 hover:text-slate-900'
+              onClick={() => setActiveMetric('temp')}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                activeMetric === 'temp'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {r}
+              Temp (°C)
             </button>
-          ))}
+            <button
+              onClick={() => setActiveMetric('rh')}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                activeMetric === 'rh'
+                  ? 'bg-blue-500/20 text-blue-300 font-bold border border-blue-500/40 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Humidity (% RH)
+            </button>
+          </div>
+
+          <div className="p-0.5 surface-well rounded-xl border border-white/10 flex items-center font-mono text-xs">
+            {(['15M', '1H', '6H', '24H', 'LIVE'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setTimeRange(r)}
+                className={`px-2 py-1 rounded-lg transition-all ${
+                  timeRange === r
+                    ? 'bg-slate-700 text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* SVG Line Graph */}
-      <div className="relative mt-4 w-full overflow-hidden">
+      <div className="flex items-center justify-between px-2 py-1 text-xs font-mono text-slate-400 mb-2">
+        <div className="flex items-center gap-4">
+          {activeMetric === 'temp' ? (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-1 rounded-full bg-cyan-400" />
+                <span className="text-white font-semibold">Supply Air</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-1 rounded-full bg-amber-400" />
+                <span className="text-white font-semibold">Return Air</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-1 rounded-full bg-sky-400" />
+                <span className="text-white font-semibold">Room Space</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 border-b-2 border-dashed border-emerald-400" />
+                <span className="text-emerald-400 font-semibold">Setpoint (22.0°C)</span>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-1 rounded-full bg-blue-400" />
+                <span className="text-white font-semibold">Relative Humidity</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 border-b-2 border-dashed border-emerald-400" />
+                <span className="text-emerald-400 font-semibold">RH Target (50%)</span>
+              </span>
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 text-slate-500">
+          <Activity className="w-3 h-3 text-cyan-400 animate-pulse" />
+          <span>Polling 1 Hz</span>
+        </div>
+      </div>
+
+      <div className="relative w-full surface-well rounded-xl p-3 border border-white/5 overflow-hidden">
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto select-none overflow-visible"
+          className="w-full h-auto select-none"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoveredIdx(null)}
         >
           <defs>
-            <linearGradient id="supplyAreaLight" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0284C7" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#0284C7" stopOpacity="0.0" />
+            <linearGradient id="cyanAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.0" />
             </linearGradient>
-            <linearGradient id="returnAreaLight" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.15" />
+            <linearGradient id="amberAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.2" />
               <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.0" />
-            </linearGradient>
-            <linearGradient id="rhAreaLight" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0284C7" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="#0284C7" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
-          {/* Cleanroom Comfort Band for RH mode */}
-          {activeMetric === 'rh' && (
-            <rect
-              x={paddingX}
-              y={rhComfortTop}
-              width={innerW}
-              height={rhComfortBottom - rhComfortTop}
-              fill="rgba(16, 185, 129, 0.08)"
-              stroke="rgba(16, 185, 129, 0.3)"
-              strokeDasharray="4 4"
-            />
-          )}
-
-          {/* Y Gridlines and Labels */}
           {yTicks.map((val) => {
-            const yPos = getY(val);
+            const y = getY(val);
             return (
               <g key={val}>
                 <line
                   x1={paddingX}
-                  y1={yPos}
+                  y1={y}
                   x2={width - paddingX}
-                  y2={yPos}
-                  stroke="rgba(15, 23, 42, 0.07)"
+                  y2={y}
+                  stroke="#1E293B"
                   strokeWidth="1"
-                  strokeDasharray="3 3"
+                  strokeDasharray="2 2"
                 />
                 <text
-                  x={paddingX - 10}
-                  y={yPos + 4}
+                  x={paddingX - 8}
+                  y={y + 3}
                   fill="#64748B"
-                  fontSize="10"
+                  fontSize="9"
                   fontFamily="JetBrains Mono"
                   textAnchor="end"
                 >
@@ -237,194 +240,153 @@ export function TemperatureTrendGraph({ initialHistory }: TemperatureTrendGraphP
             );
           })}
 
-          {/* Set Point Reference Line */}
           {activeMetric === 'temp' ? (
-            <line
-              x1={paddingX}
-              y1={setPointY}
-              x2={width - paddingX}
-              y2={setPointY}
-              stroke="#0284C7"
-              strokeWidth="1.5"
-              strokeDasharray="4 4"
-              opacity="0.8"
-            />
-          ) : (
-            <line
-              x1={paddingX}
-              y1={rhSetPointY}
-              x2={width - paddingX}
-              y2={rhSetPointY}
-              stroke="#059669"
-              strokeWidth="1.5"
-              strokeDasharray="4 4"
-              opacity="0.85"
-            />
-          )}
-
-          {/* Data Lines: Temperature Mode */}
-          {activeMetric === 'temp' && data.length > 1 && (
             <>
-              {/* Supply Area Fill */}
-              <polygon
-                fill="url(#supplyAreaLight)"
-                points={`${getX(0)},${height - paddingY} ${supplyPoints} ${getX(data.length - 1)},${height - paddingY}`}
+              <line
+                x1={paddingX}
+                y1={setPointY}
+                x2={width - paddingX}
+                y2={setPointY}
+                stroke="#22C55E"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                strokeOpacity="0.8"
               />
-              {/* Supply Polyline */}
-              <polyline
-                fill="none"
-                stroke="#0284C7"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={supplyPoints}
-              />
-              {/* Return Polyline */}
-              <polyline
-                fill="none"
-                stroke="#D97706"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={returnPoints}
-              />
-            </>
-          )}
 
-          {/* Data Lines: RH Mode */}
-          {activeMetric === 'rh' && data.length > 1 && (
-            <>
-              {/* RH Area Fill */}
-              <polygon
-                fill="url(#rhAreaLight)"
-                points={`${getX(0)},${height - paddingY} ${rhPoints} ${getX(data.length - 1)},${height - paddingY}`}
-              />
-              {/* RH Polyline */}
-              <polyline
-                fill="none"
-                stroke="#0284C7"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={rhPoints}
-              />
-            </>
-          )}
-
-          {/* Interactive Nodes */}
-          {data.map((d, i) => {
-            const x = getX(i);
-            const isHovered = hoveredIdx === i;
-
-            return (
-              <g key={i} className="cursor-pointer">
-                {/* Vertical hover crosshair */}
-                {isHovered && (
-                  <line
-                    x1={x}
-                    y1={paddingY}
-                    x2={x}
-                    y2={height - paddingY}
-                    stroke="rgba(15, 23, 42, 0.2)"
-                    strokeWidth="1"
-                    strokeDasharray="2 2"
+              {data.length > 1 && (
+                <>
+                  <polygon
+                    points={`${paddingX},${innerH + paddingY} ${supplyPoints} ${width - paddingX},${innerH + paddingY}`}
+                    fill="url(#cyanAreaGrad)"
                   />
-                )}
-
-                {activeMetric === 'temp' ? (
-                  <>
-                    <circle
-                      cx={x}
-                      cy={getY(d.supply_c)}
-                      r={isHovered ? 5.5 : 3.5}
-                      fill="#FFFFFF"
-                      stroke="#0284C7"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx={x}
-                      cy={getY(d.return_c)}
-                      r={isHovered ? 5.5 : 3.5}
-                      fill="#FFFFFF"
-                      stroke="#D97706"
-                      strokeWidth="2"
-                    />
-                  </>
-                ) : (
-                  <circle
-                    cx={x}
-                    cy={getY(d.rh_pct ?? 48.5)}
-                    r={isHovered ? 5.5 : 3.5}
-                    fill="#FFFFFF"
-                    stroke="#0284C7"
+                  <polyline
+                    fill="none"
+                    stroke="#06B6D4"
                     strokeWidth="2.5"
+                    points={supplyPoints}
                   />
-                )}
-
-                {/* Invisible hover hotspot */}
-                <rect
-                  x={x - 15}
-                  y={paddingY}
-                  width={30}
-                  height={innerH}
-                  fill="transparent"
-                  onMouseEnter={() => setHoveredIdx(i)}
-                  onMouseLeave={() => setHoveredIdx(null)}
+                  <polyline
+                    fill="none"
+                    stroke="#F59E0B"
+                    strokeWidth="2"
+                    points={returnPoints}
+                  />
+                  <polyline
+                    fill="none"
+                    stroke="#38BDF8"
+                    strokeWidth="1.5"
+                    strokeDasharray="3 2"
+                    points={roomPoints}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <line
+                x1={paddingX}
+                y1={rhSetPointY}
+                x2={width - paddingX}
+                y2={rhSetPointY}
+                stroke="#22C55E"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                strokeOpacity="0.8"
+              />
+              {data.length > 1 && (
+                <polyline
+                  fill="none"
+                  stroke="#3B82F6"
+                  strokeWidth="2.5"
+                  points={rhPoints}
                 />
+              )}
+            </>
+          )}
 
-                {/* X Axis Time Labels */}
-                {(data.length <= 12 || i % 2 === 0 || i === data.length - 1) && (
-                  <text
-                    x={x}
-                    y={height - paddingY + 18}
-                    fill="#64748B"
-                    fontSize="9"
-                    fontFamily="JetBrains Mono"
-                    textAnchor="middle"
-                  >
-                    {d.time}
-                  </text>
-                )}
-              </g>
-            );
-          })}
+          {hoveredIdx !== null && (
+            <g>
+              <line
+                x1={getX(hoveredIdx)}
+                y1={paddingY}
+                x2={getX(hoveredIdx)}
+                y2={height - paddingY}
+                stroke="#06B6D4"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
+              />
+              {activeMetric === 'temp' ? (
+                <>
+                  <circle
+                    cx={getX(hoveredIdx)}
+                    cy={getY(data[hoveredIdx].supply_c)}
+                    r="4"
+                    fill="#06B6D4"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.5"
+                  />
+                  <circle
+                    cx={getX(hoveredIdx)}
+                    cy={getY(data[hoveredIdx].return_c)}
+                    r="4"
+                    fill="#F59E0B"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.5"
+                  />
+                </>
+              ) : (
+                <circle
+                  cx={getX(hoveredIdx)}
+                  cy={getY(data[hoveredIdx].rh_pct ?? 48.5)}
+                  r="4"
+                  fill="#3B82F6"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.5"
+                />
+              )}
+            </g>
+          )}
         </svg>
 
-        {/* Hover Tooltip Card (Light Mode) */}
-        {hoveredIdx !== null && data[hoveredIdx] && (
+        {hoveredData && hoveredIdx !== null && (
           <div
-            className="absolute top-2 z-20 rounded-xl p-3 bg-white/95 border border-slate-200/90 shadow-xl pointer-events-none text-xs backdrop-blur-md"
+            className="absolute top-4 surface-panel border border-cyan-500/40 rounded-xl p-3 shadow-2xl text-xs font-mono pointer-events-none z-20"
             style={{
-              left: `${Math.min(width - 150, Math.max(50, getX(hoveredIdx) - 60))}px`
+              left: `${Math.min(width - 240, Math.max(20, (getX(hoveredIdx) / width) * 100))}%`,
             }}
           >
-            <div className="font-mono-numbers font-semibold text-slate-500 pb-1.5 border-b border-slate-100 text-[10px]">
-              {data[hoveredIdx].time}
+            <div className="text-[10px] text-slate-400 border-b border-white/10 pb-1 mb-1.5 flex items-center justify-between gap-4">
+              <span>{hoveredData.time}</span>
+              <span className="text-cyan-400 font-bold">SNAPSHOT</span>
             </div>
             {activeMetric === 'temp' ? (
-              <div className="space-y-1 pt-1.5 font-mono-numbers">
-                <div className="flex justify-between space-x-3 text-sky-700">
-                  <span>Supply:</span>
-                  <span className="font-bold">{data[hoveredIdx].supply_c.toFixed(1)}°C</span>
+              <div className="space-y-1">
+                <div className="flex justify-between gap-4">
+                  <span className="text-cyan-400">Supply Air:</span>
+                  <span className="text-white font-bold">{hoveredData.supply_c}°C</span>
                 </div>
-                <div className="flex justify-between space-x-3 text-amber-700">
-                  <span>Return:</span>
-                  <span className="font-bold">{data[hoveredIdx].return_c.toFixed(1)}°C</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-amber-400">Return Air:</span>
+                  <span className="text-white font-bold">{hoveredData.return_c}°C</span>
                 </div>
-                <div className="flex justify-between space-x-3 text-slate-500 pt-1 border-t border-slate-100">
-                  <span>Setpoint:</span>
-                  <span>{data[hoveredIdx].set_point_c.toFixed(1)}°C</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-sky-400">Room Space:</span>
+                  <span className="text-white font-bold">{hoveredData.current_c}°C</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-emerald-400">Setpoint:</span>
+                  <span className="text-emerald-400 font-bold">{hoveredData.set_point_c}°C</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-1 pt-1.5 font-mono-numbers">
-                <div className="flex justify-between space-x-3 text-sky-700">
-                  <span>Actual RH:</span>
-                  <span className="font-bold">{(data[hoveredIdx].rh_pct ?? 48.5).toFixed(1)}%</span>
+              <div className="space-y-1">
+                <div className="flex justify-between gap-4">
+                  <span className="text-blue-400">RH Measured:</span>
+                  <span className="text-white font-bold">{hoveredData.rh_pct ?? 48.5}%</span>
                 </div>
-                <div className="flex justify-between space-x-3 text-slate-500 pt-1 border-t border-slate-100">
-                  <span>Target RH:</span>
-                  <span>{(data[hoveredIdx].rh_setpoint_pct ?? 50.0).toFixed(1)}%</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-emerald-400">RH Target:</span>
+                  <span className="text-emerald-400 font-bold">{hoveredData.rh_setpoint_pct ?? 50.0}%</span>
                 </div>
               </div>
             )}

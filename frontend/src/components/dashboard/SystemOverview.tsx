@@ -17,9 +17,12 @@ import {
   Gauge,
   Power,
   RefreshCw,
-  ShieldAlert
+  ShieldAlert,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { toggleAhuState, toggleOduState, toggleHeaterState } from '@/lib/api';
+import { TwoStepConfirmModal } from '@/components/common/TwoStepConfirmModal';
 
 interface SystemOverviewProps {
   systemState: SystemState | null;
@@ -34,19 +37,37 @@ export function SystemOverview({
   onToggleOdu,
   onToggleHeater
 }: SystemOverviewProps) {
-  const [viewMode, setViewMode] = useState<'connected' | 'schematic'>('connected');
+  const [viewMode, setViewMode] = useState<'connected' | 'schematic'>('schematic');
   const [localAhuState, setLocalAhuState] = useState<'ON' | 'OFF' | null>(null);
   const [localOduStates, setLocalOduStates] = useState<Record<string, 'ON' | 'OFF'>>({});
   const [localHeaterBankState, setLocalHeaterBankState] = useState<'ON' | 'OFF' | null>(null);
-  const [hoveredComponent, setHoveredComponent] = useState<{
+
+  const [activeDrawer, setActiveDrawer] = useState<{
     id: string;
     title: string;
     subtitle: string;
-    metrics: { label: string; value: string; unit?: string }[];
     status: 'ON' | 'OFF';
+    quality?: 'GOOD' | 'UNCERTAIN' | 'STALE' | 'BAD';
+    metrics: { label: string; value: string; unit?: string }[];
     type: 'ahu' | 'odu' | 'heater' | 'filter' | 'coil' | 'fan' | 'room';
   } | null>(null);
-  
+
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    targetComponent: string;
+    actionDescription: string;
+    requestedValue: string;
+    action: () => Promise<void>;
+  }>({
+    isOpen: false,
+    title: '',
+    targetComponent: '',
+    actionDescription: '',
+    requestedValue: '',
+    action: async () => {},
+  });
+
   const rawAhuOnline = systemState?.ahu?.state === 'ON';
   const ahuOnline = localAhuState !== null ? localAhuState === 'ON' : rawAhuOnline;
 
@@ -54,391 +75,421 @@ export function SystemOverview({
   const rawAnyHeaterRunning = (systemState?.heater_summary?.running ?? 0) > 0;
   const anyHeaterRunning = localHeaterBankState !== null ? localHeaterBankState === 'ON' : rawAnyHeaterRunning;
 
-  const handleToggleAhu = async (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const nextState = ahuOnline ? 'OFF' : 'ON';
-    setLocalAhuState(nextState);
-    if (onToggleAhu) onToggleAhu(nextState);
-    try {
-      await toggleAhuState(nextState);
-    } catch (err) {
-      console.error(err);
-    }
+  const requestConfirmation = (
+    title: string,
+    targetComponent: string,
+    actionDescription: string,
+    requestedValue: string,
+    action: () => Promise<void>
+  ) => {
+    setConfirmModalState({
+      isOpen: true,
+      title,
+      targetComponent,
+      actionDescription,
+      requestedValue,
+      action,
+    });
   };
 
-  const handleToggleOdu = async (oduId: string, current: 'ON' | 'OFF', e?: React.MouseEvent) => {
+  const executeConfirmedAction = async () => {
+    const act = confirmModalState.action;
+    setConfirmModalState((prev) => ({ ...prev, isOpen: false }));
+    await act();
+  };
+
+  const handleToggleAhu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextState = ahuOnline ? 'OFF' : 'ON';
+    requestConfirmation(
+      'AHU Primary Blower Control',
+      'AHU-01 Cleanroom Air Handler',
+      `Command blower fan state transition to ${nextState}`,
+      nextState,
+      async () => {
+        setLocalAhuState(nextState);
+        if (onToggleAhu) onToggleAhu(nextState);
+        try {
+          await toggleAhuState(nextState);
+        } catch {}
+      }
+    );
+  };
+
+  const handleToggleOdu = (oduId: string, current: 'ON' | 'OFF', e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const effective = localOduStates[oduId] ?? current;
     const nextState = effective === 'ON' ? 'OFF' : 'ON';
-    setLocalOduStates(prev => ({ ...prev, [oduId]: nextState }));
-    if (onToggleOdu) onToggleOdu(oduId, nextState);
-    try {
-      await toggleOduState(oduId, nextState);
-    } catch (err) {
-      console.error(err);
-    }
+    requestConfirmation(
+      'Condenser Inverter Stage Control',
+      oduId,
+      `Command outdoor condensing unit to ${nextState}`,
+      nextState,
+      async () => {
+        setLocalOduStates((prev) => ({ ...prev, [oduId]: nextState }));
+        if (onToggleOdu) onToggleOdu(oduId, nextState);
+        try {
+          await toggleOduState(oduId, nextState);
+        } catch {}
+      }
+    );
   };
 
-  const handleToggleHeaterBank = async (e?: React.MouseEvent) => {
+  const handleToggleHeaterBank = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const nextState = anyHeaterRunning ? 'OFF' : 'ON';
-    setLocalHeaterBankState(nextState);
-    for (let i = 1; i <= 8; i++) {
-      const id = `HTR-0${i}`;
-      toggleHeaterState(id, nextState).catch(() => {});
-    }
+    requestConfirmation(
+      'SCR Reheat Bank Supervisory Cutout',
+      'HTR-BANK-01 (8 Stages)',
+      `Command all 8 electric reheat stages to ${nextState}`,
+      nextState,
+      async () => {
+        setLocalHeaterBankState(nextState);
+        for (let i = 1; i <= 8; i++) {
+          const id = `HTR-0${i}`;
+          toggleHeaterState(id, nextState).catch(() => {});
+        }
+      }
+    );
   };
 
-  const handleAllSystemsOn = async () => {
-    setLocalAhuState('ON');
-    toggleAhuState('ON').catch(() => {});
-    const oduUpdates: Record<string, 'ON' | 'OFF'> = {};
-    odus.forEach(o => {
-      oduUpdates[o.id] = 'ON';
-      toggleOduState(o.id, 'ON').catch(() => {});
-    });
-    setLocalOduStates(prev => ({ ...prev, ...oduUpdates }));
-    setLocalHeaterBankState('ON');
-    for (let i = 1; i <= 8; i++) {
-      toggleHeaterState(`HTR-0${i}`, 'ON').catch(() => {});
-    }
+  const handleAllSystemsOn = () => {
+    requestConfirmation(
+      'Emergency Full Plant Energize',
+      'All Production Subsystems',
+      'Energize AHU-01, all 6 ODUs, and 8 reheat stages',
+      'ALL ONLINE',
+      async () => {
+        setLocalAhuState('ON');
+        toggleAhuState('ON').catch(() => {});
+        const oduUpdates: Record<string, 'ON' | 'OFF'> = {};
+        odus.forEach((o) => {
+          oduUpdates[o.id] = 'ON';
+          toggleOduState(o.id, 'ON').catch(() => {});
+        });
+        setLocalOduStates((prev) => ({ ...prev, ...oduUpdates }));
+        setLocalHeaterBankState('ON');
+        for (let i = 1; i <= 8; i++) {
+          toggleHeaterState(`HTR-0${i}`, 'ON').catch(() => {});
+        }
+      }
+    );
   };
 
-  const handleSafeStandby = async () => {
-    setLocalAhuState('OFF');
-    toggleAhuState('OFF').catch(() => {});
-    const oduUpdates: Record<string, 'ON' | 'OFF'> = {};
-    odus.forEach(o => {
-      oduUpdates[o.id] = 'OFF';
-      toggleOduState(o.id, 'OFF').catch(() => {});
-    });
-    setLocalOduStates(prev => ({ ...prev, ...oduUpdates }));
-    setLocalHeaterBankState('OFF');
-    for (let i = 1; i <= 8; i++) {
-      toggleHeaterState(`HTR-0${i}`, 'OFF').catch(() => {});
-    }
+  const handleSafeStandby = () => {
+    requestConfirmation(
+      'System Safe Standby Transition',
+      'All Subsystems',
+      'Transition plant to low-load standby mode (AHU ON, 2 ODUs, 2 HTR)',
+      'SAFE STANDBY',
+      async () => {
+        setLocalAhuState('ON');
+        toggleAhuState('ON').catch(() => {});
+        const oduUpdates: Record<string, 'ON' | 'OFF'> = {};
+        odus.forEach((o, i) => {
+          const st = i < 2 ? 'ON' : 'OFF';
+          oduUpdates[o.id] = st;
+          toggleOduState(o.id, st).catch(() => {});
+        });
+        setLocalOduStates((prev) => ({ ...prev, ...oduUpdates }));
+        setLocalHeaterBankState('ON');
+        for (let i = 1; i <= 8; i++) {
+          const st = i <= 2 ? 'ON' : 'OFF';
+          toggleHeaterState(`HTR-0${i}`, st).catch(() => {});
+        }
+      }
+    );
   };
 
   return (
-    <div className="rounded-3xl overflow-hidden shadow-[0_4px_20px_-2px_rgba(15,23,42,0.06)] border border-slate-300 bg-white transition-all duration-300">
-      {/* Top Header */}
-      <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-sky-600 animate-pulse" />
-          <h2 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <span>System Overview</span>
-            <span className="text-xs font-semibold text-slate-600 hidden sm:inline">
-              · Live Interactive Schematic &amp; Kinetic Flow
+    <div className="surface-panel rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative">
+      <div className="p-4 md:p-5 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+            <h2 className="text-base font-bold font-sans text-white tracking-tight uppercase">
+              HVAC Digital Twin & Live Schematic
+            </h2>
+            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/25">
+              CLEANROOM DECK
             </span>
-          </h2>
+          </div>
+          <p className="text-xs text-slate-400 font-mono mt-1">
+            Decoupled thermodynamic topology: VRF condensers, HEPA air handler & 8-stage SCR reheat
+          </p>
         </div>
 
-        {/* View Switcher Pills */}
-        <div className="bg-slate-200/80 p-1 rounded-2xl border border-slate-300 flex text-xs">
-          <button
-            onClick={() => setViewMode('connected')}
-            className={`px-3.5 py-1.5 rounded-xl font-medium transition-all duration-200 ${
-              viewMode === 'connected'
-                ? 'bg-white text-sky-950 shadow-xs border border-slate-300 font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            System Flow
-          </button>
-          <button
-            onClick={() => setViewMode('schematic')}
-            className={`px-3.5 py-1.5 rounded-xl font-medium transition-all duration-200 ${
-              viewMode === 'schematic'
-                ? 'bg-white text-sky-950 shadow-xs border border-slate-300 font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Mechanical Schematic
-          </button>
+        <div className="flex items-center gap-2">
+          <div className="p-1 rounded-xl surface-well border border-white/10 flex items-center gap-1">
+            <button
+              onClick={() => setViewMode('schematic')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
+                viewMode === 'schematic'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Vector Schematic</span>
+            </button>
+            <button
+              onClick={() => setViewMode('connected')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
+                viewMode === 'connected'
+                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Block Flow</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 relative bg-slate-50/50">
-        {/* Floating Detail Inspector Tooltip on Hover */}
-        {hoveredComponent && (
-          <div className="absolute top-3 right-5 z-20 rounded-2xl p-4 shadow-xl border border-slate-300 max-w-xs animate-fadeIn text-xs transition-all pointer-events-none backdrop-blur-xl bg-white text-slate-900">
-            <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-200">
-              <div>
-                <div className="font-bold text-slate-900 text-sm">{hoveredComponent.title}</div>
-                <div className="text-[10px] text-slate-600 font-medium">{hoveredComponent.subtitle}</div>
-              </div>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                hoveredComponent.status === 'ON'
-                  ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                  : 'bg-slate-200 text-slate-700 border border-slate-300'
-              }`}>
-                {hoveredComponent.status}
-              </span>
-            </div>
+      <div className="px-4 py-2.5 bg-slate-900/60 border-b border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="flex items-center gap-3 text-slate-300">
+          <span className="text-slate-500 uppercase tracking-wider text-[10px]">Supervisory Staging:</span>
+          <button
+            onClick={handleAllSystemsOn}
+            className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-colors font-bold"
+          >
+            All Systems Active
+          </button>
+          <button
+            onClick={handleSafeStandby}
+            className="px-2.5 py-1 rounded-lg surface-well hover:bg-slate-800 text-slate-300 border border-white/10 transition-colors"
+          >
+            Safe Standby (Eco)
+          </button>
+        </div>
 
-            <div className="space-y-1.5 pt-2 text-[11px]">
-              {hoveredComponent.metrics.map((m, idx) => (
-                <div key={idx} className="flex justify-between items-center py-0.5">
-                  <span className="text-slate-600 font-medium">{m.label}</span>
-                  <span className="font-mono-numbers font-bold text-slate-900">
-                    {m.value} {m.unit || ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-cyan-400" /> Liquid Refrigerant
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-blue-500" /> Conditioned Air
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-amber-500" /> Duct Reheat
+          </span>
+        </div>
+      </div>
 
+      <div className="p-4 md:p-6 relative bg-[#020617] overflow-hidden min-h-[500px]">
         {viewMode === 'connected' ? (
-          /* View 1: Interconnected Flow Sequence with Full Interactive Controls */
-          <div className="w-full space-y-3">
-            {/* Quick Supervisory Control Toolbar */}
-            <div className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 shadow-2xs flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center space-x-2 text-xs font-bold text-slate-800">
-                <Sliders className="w-3.5 h-3.5 text-sky-600" />
-                <span>Direct Supervisory Controls</span>
-                <span className="text-[10px] font-normal text-slate-500 hidden sm:inline">(Tap any unit or toggle button to switch ON/OFF)</span>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div 
+              onClick={() => setActiveDrawer({
+                id: 'AHU-01',
+                title: 'AHU-01 Supply Air Handler',
+                subtitle: 'Centrifugal Backward-Curved Fan Unit',
+                status: ahuOnline ? 'ON' : 'OFF',
+                quality: 'GOOD',
+                type: 'ahu',
+                metrics: [
+                  { label: 'Airflow Delivery', value: `${systemState?.ahu?.airflow_cfm ?? 14500}`, unit: 'CFM' },
+                  { label: 'VFD Speed', value: `${systemState?.ahu?.fan_vfd_hz ?? 50.0}`, unit: 'Hz' },
+                  { label: 'HEPA Differential Pressure', value: `${systemState?.ahu?.filter_dp_pa ?? 120}`, unit: 'Pa' },
+                  { label: 'Humidifier Active', value: systemState?.ahu?.humidifier_active ? 'YES' : 'NO' }
+                ]
+              })}
+              className={`surface-panel rounded-2xl p-5 border cursor-pointer transition-all hover:scale-[1.02] ${
+                ahuOnline ? 'border-cyan-500/40 shadow-[0_0_24px_rgba(6,182,212,0.15)]' : 'border-white/5 opacity-60'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <Fan className={`w-5 h-5 ${ahuOnline ? 'spin-fast' : ''}`} />
+                </div>
+                <button
+                  onClick={handleToggleAhu}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold transition-all ${
+                    ahuOnline ? 'bg-cyan-500 text-slate-950 shadow-md' : 'surface-well text-slate-400 border border-white/10'
+                  }`}
+                >
+                  {ahuOnline ? 'RUNNING' : 'STANDBY'}
+                </button>
               </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleAllSystemsOn}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer flex items-center space-x-1 shadow-xs active:scale-95"
-                >
-                  <Power className="w-3 h-3" />
-                  <span>All Systems Active</span>
-                </button>
-                <button
-                  onClick={handleSafeStandby}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors cursor-pointer flex items-center space-x-1 active:scale-95"
-                >
-                  <ShieldAlert className="w-3 h-3 text-amber-600" />
-                  <span>Safe Standby</span>
-                </button>
+              <h3 className="text-sm font-bold text-white font-mono">AHU-01 BLOWER</h3>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">Supply Delivery Fan</p>
+              <div className="mt-4 pt-3 border-t border-white/5 space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Airflow:</span>
+                  <span className="text-white font-bold">{ahuOnline ? (systemState?.ahu?.airflow_cfm ?? 14500) : 0} CFM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">VFD Drive:</span>
+                  <span className="text-cyan-400 font-bold">{ahuOnline ? (systemState?.ahu?.fan_vfd_hz ?? 50.0) : 0} Hz</span>
+                </div>
               </div>
             </div>
 
-            <div className="w-full overflow-x-auto pb-2 p-3 rounded-2xl bg-white border border-slate-300 shadow-xs scrollbar-thin scrollbar-thumb-slate-300">
-              <div className="flex items-center justify-between min-w-[840px] px-2 py-3">
-                {/* AHU-01 Card (Interactive Toggle) */}
-                <div 
-                  className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-105 cursor-pointer"
-                  onClick={handleToggleAhu}
-                  onMouseEnter={() => setHoveredComponent({
-                    id: 'AHU-01',
-                    title: 'Air Handling Unit AHU-01',
-                    subtitle: 'Primary Cleanroom Conditioned Air · Click to Toggle',
-                    status: ahuOnline ? 'ON' : 'OFF',
-                    type: 'ahu',
-                    metrics: [
-                      { label: 'Airflow Volume', value: ahuOnline ? '14,500' : '0', unit: 'CFM' },
-                      { label: 'Supply Fan VFD', value: ahuOnline ? '50.0' : '0.0', unit: 'Hz' },
-                      { label: 'Filter Differential', value: ahuOnline ? '120' : '5', unit: 'Pa (Clean)' }
-                    ]
-                  })}
-                  onMouseLeave={() => setHoveredComponent(null)}
-                >
-                  <span className="text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">AHU</span>
-                  <div className={`w-26 h-26 rounded-2xl p-2.5 flex flex-col items-center justify-between shadow-xs transition-all duration-300 border-2 ${
-                    ahuOnline 
-                      ? 'bg-emerald-50/40 border-emerald-500 text-slate-900 shadow-emerald-100' 
-                      : 'bg-slate-100 border-slate-300 text-slate-500'
-                  }`}>
-                    <div className="w-full flex justify-between items-center text-[9px] text-slate-600 font-mono-numbers">
-                      <span>CFM</span>
-                      <span className="text-emerald-800 font-bold">{ahuOnline ? '8.45k' : '0'}</span>
-                    </div>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
-                      ahuOnline 
-                        ? 'bg-emerald-100 border-emerald-300 text-emerald-700 shadow-xs'
-                        : 'bg-slate-200 border-slate-300 text-slate-400'
-                    }`}>
-                      <Fan className={`w-5 h-5 ${ahuOnline ? 'animate-fan' : ''}`} />
-                    </div>
-                    <div className="text-[11px] font-bold text-slate-900 font-mono-numbers">AHU-01</div>
-                  </div>
-                  <button
-                    onClick={handleToggleAhu}
-                    className={`mt-2.5 px-3 py-1 rounded-full text-[10px] font-mono-numbers font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs flex items-center space-x-1.5 active:scale-95 ${
-                      ahuOnline
-                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                        : 'bg-slate-200 hover:bg-slate-300 text-slate-700 border border-slate-300'
-                    }`}
-                  >
-                    <Power className="w-2.5 h-2.5" />
-                    <span>{ahuOnline ? 'RUNNING' : 'STANDBY'}</span>
-                  </button>
+            <div 
+              onClick={() => setActiveDrawer({
+                id: 'ODU-BANK',
+                title: 'VRF Inverter Condenser Bank',
+                subtitle: '6-Circuit Modular Scroll Chillers',
+                status: 'ON',
+                quality: 'GOOD',
+                type: 'odu',
+                metrics: [
+                  { label: 'Active Inverters', value: `${systemState?.odu_summary?.running ?? 5}/6` },
+                  { label: 'Total Power Draw', value: `${(systemState?.odu_summary?.running ?? 5) * 18.2}`, unit: 'kW' },
+                  { label: 'Refrigerant Head Pressure', value: '1.85', unit: 'MPa' },
+                  { label: 'Condenser Fan Avg RPM', value: '820', unit: 'RPM' }
+                ]
+              })}
+              className="surface-panel rounded-2xl p-5 border border-white/10 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Activity className="w-5 h-5" />
                 </div>
-
-                {/* Connecting pipe from AHU to ODU-1 */}
-                <div className="flex-1 min-w-4 max-w-8 h-2 bg-slate-200 relative overflow-hidden self-center mx-1 rounded-full border border-slate-300">
-                  {ahuOnline && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-sky-500 animate-pulse" />
-                  )}
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  {systemState?.odu_summary?.running ?? 5}/6 RUN
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-white font-mono">ODU INVERTERS</h3>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">6x DX Condensing Units</p>
+              <div className="mt-4 pt-3 border-t border-white/5 space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Inverter Load:</span>
+                  <span className="text-white font-bold">84.2%</span>
                 </div>
-
-                {/* 6 Outdoor Units (Interactive Toggles) */}
-                {odus.map((odu, index) => {
-                  const effectiveState = localOduStates[odu.id] ?? odu.state;
-                  const isOn = effectiveState === 'ON';
-                  return (
-                    <React.Fragment key={odu.id}>
-                      <div 
-                        className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-108 cursor-pointer"
-                        onClick={(e) => handleToggleOdu(odu.id, odu.state, e)}
-                        onMouseEnter={() => setHoveredComponent({
-                          id: odu.id,
-                          title: `Outdoor Unit ${odu.name}`,
-                          subtitle: `Refrigerant Circuit ${(index % 3) + 1} · Click to Toggle`,
-                          status: isOn ? 'ON' : 'OFF',
-                          type: 'odu',
-                          metrics: [
-                            { label: 'Power Draw', value: `${isOn ? odu.power_kw : 0.0}`, unit: 'kW' },
-                            { label: 'Fan Rotation', value: `${isOn ? odu.fan_rpm : 0}`, unit: 'RPM' },
-                            { label: 'Condenser Coil Temp', value: `${odu.temp_c}`, unit: '°C' }
-                          ]
-                        })}
-                        onMouseLeave={() => setHoveredComponent(null)}
-                      >
-                        <span className="text-[10px] font-bold text-slate-700 mb-2 uppercase tracking-wider">{odu.name}</span>
-                        <div 
-                          className={`w-20 h-26 rounded-2xl p-2 flex flex-col items-center justify-between transition-all duration-300 border-2 shadow-xs ${
-                            isOn 
-                              ? 'border-sky-500 bg-sky-50/40 text-slate-900 shadow-sky-100' 
-                              : 'border-slate-300 bg-slate-100 opacity-60 text-slate-500'
-                          }`}
-                        >
-                          <div className="w-full flex justify-between text-[8px] font-mono-numbers text-slate-600 font-semibold">
-                            <span>ODU</span>
-                            <span className={isOn ? 'text-sky-800 font-bold' : 'text-slate-500'}>{isOn ? 'ACT' : 'STB'}</span>
-                          </div>
-                          
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${
-                            isOn 
-                              ? 'bg-sky-100 border-sky-300 text-sky-700 shadow-xs' 
-                              : 'bg-slate-200 border-slate-300 text-slate-400'
-                          }`}>
-                            <Fan className={`w-5 h-5 ${isOn ? 'animate-fan' : ''}`} />
-                          </div>
-
-                          <div className="text-[10px] font-mono-numbers text-slate-900 font-bold truncate">
-                            {isOn ? `${odu.power_kw}kW` : '0 kW'}
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={(e) => handleToggleOdu(odu.id, odu.state, e)}
-                          className={`mt-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-numbers font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-2xs flex items-center space-x-1 active:scale-95 ${
-                            isOn
-                              ? 'bg-sky-600 hover:bg-sky-700 text-white'
-                              : 'bg-slate-200 hover:bg-slate-300 text-slate-600 border border-slate-300'
-                          }`}
-                        >
-                          <Power className="w-2 h-2" />
-                          <span>{isOn ? 'RUN' : 'OFF'}</span>
-                        </button>
-                      </div>
-
-                      {/* Pipe between units */}
-                      {index < odus.length - 1 && (
-                        <div className="flex-1 min-w-3 max-w-6 h-2 bg-slate-200 relative overflow-hidden self-center mx-0.5 rounded-full border border-slate-300">
-                          {isOn && (
-                            <div className="absolute inset-0 bg-sky-500 animate-pulse" />
-                          )}
-                        </div>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-
-                {/* Connecting pipe from ODU-6 to Heater Bank */}
-                <div className="flex-1 min-w-4 max-w-8 h-2 bg-slate-200 relative overflow-hidden self-center mx-1 rounded-full border border-slate-300">
-                  {anyHeaterRunning && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-amber-500 animate-pulse" />
-                  )}
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Total Power:</span>
+                  <span className="text-blue-400 font-bold">{((systemState?.odu_summary?.running ?? 5) * 18.2).toFixed(1)} kW</span>
                 </div>
+              </div>
+            </div>
 
-                {/* Heater Bank Card (Interactive Toggle) */}
-                <div 
-                  className="flex flex-col items-center shrink-0 group transition-transform duration-300 hover:scale-105 cursor-pointer"
+            <div 
+              onClick={() => setActiveDrawer({
+                id: 'HTR-BANK',
+                title: 'Electric Duct Reheat Bank',
+                subtitle: '8-Stage SCR Silicon Trim Heaters',
+                status: anyHeaterRunning ? 'ON' : 'OFF',
+                quality: 'GOOD',
+                type: 'heater',
+                metrics: [
+                  { label: 'Active Stages', value: `${systemState?.heater_summary?.running ?? 8}/8` },
+                  { label: 'Total Reheat Power', value: `${(systemState?.heater_summary?.running ?? 8) * 3.0}`, unit: 'kW' },
+                  { label: 'SCR Thermal Coils', value: '52.4', unit: '°C' },
+                  { label: 'High Limit Thermostat', value: 'NOMINAL (<85°C)' }
+                ]
+              })}
+              className={`surface-panel rounded-2xl p-5 border cursor-pointer transition-all hover:scale-[1.02] ${
+                anyHeaterRunning ? 'border-amber-500/40 shadow-[0_0_24px_rgba(245,158,11,0.15)]' : 'border-white/5 opacity-60'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Flame className={`w-5 h-5 ${anyHeaterRunning ? 'animate-pulse' : ''}`} />
+                </div>
+                <button
                   onClick={handleToggleHeaterBank}
-                  onMouseEnter={() => setHoveredComponent({
-                    id: 'HTR-BANK',
-                    title: 'Electric Heating Stage Bank',
-                    subtitle: '8-Unit Modulating Thermal Elements · Click to Toggle',
-                    status: anyHeaterRunning ? 'ON' : 'OFF',
-                    type: 'heater',
-                    metrics: [
-                      { label: 'Active Stages', value: `${anyHeaterRunning ? (systemState?.heater_summary?.running ?? 8) : 0}/8`, unit: '' },
-                      { label: 'Total Heat Duty', value: `${anyHeaterRunning ? (((systemState?.heater_summary?.running ?? 8) * 3.0).toFixed(1)) : '0.0'}`, unit: 'kW' },
-                      { label: 'Average Core Temp', value: anyHeaterRunning ? '52.5' : '24.0', unit: '°C' }
-                    ]
-                  })}
-                  onMouseLeave={() => setHoveredComponent(null)}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold transition-all ${
+                    anyHeaterRunning ? 'bg-amber-500 text-slate-950 shadow-md' : 'surface-well text-slate-400 border border-white/10'
+                  }`}
                 >
-                  <span className="text-[11px] font-bold text-slate-700 mb-2 uppercase tracking-wider">Heater Bank</span>
-                  <div className={`w-26 h-26 rounded-2xl p-2.5 flex flex-col items-center justify-between shadow-xs transition-all duration-300 border-2 ${
-                    anyHeaterRunning 
-                      ? 'border-amber-500 bg-amber-50/40 text-slate-900 shadow-amber-100' 
-                      : 'border-slate-300 bg-slate-100 opacity-60 text-slate-500'
-                  }`}>
-                    <div className="w-full flex justify-between items-center text-[9px] text-slate-600 font-mono-numbers">
-                      <span>STAGES</span>
-                      <span className="text-amber-800 font-bold">{anyHeaterRunning ? `${systemState?.heater_summary?.running ?? 8}/8` : '0/8'}</span>
-                    </div>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
-                      anyHeaterRunning 
-                        ? 'bg-amber-100 border-amber-300 text-amber-700 shadow-xs'
-                        : 'bg-slate-200 border-slate-300 text-slate-400'
-                    }`}>
-                      <Flame className={`w-5 h-5 ${anyHeaterRunning ? 'animate-pulse' : ''}`} />
-                    </div>
-                    <div className="text-[11px] font-bold text-slate-900 font-mono-numbers">8-STAGE REHEAT</div>
-                  </div>
-                  <button
-                    onClick={handleToggleHeaterBank}
-                    className={`mt-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono-numbers font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs flex items-center space-x-1 active:scale-95 ${
-                      anyHeaterRunning
-                        ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                        : 'bg-slate-200 hover:bg-slate-300 text-slate-600 border border-slate-300'
-                    }`}
-                  >
-                    <Power className="w-2 h-2" />
-                    <span>{anyHeaterRunning ? 'ENERGIZED' : 'STANDBY'}</span>
-                  </button>
+                  {anyHeaterRunning ? 'ENERGIZED' : 'OFF'}
+                </button>
+              </div>
+              <h3 className="text-sm font-bold text-white font-mono">8-STAGE REHEAT</h3>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">Duct Trim Heaters</p>
+              <div className="mt-4 pt-3 border-t border-white/5 space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Active Stages:</span>
+                  <span className="text-white font-bold">{anyHeaterRunning ? (systemState?.heater_summary?.running ?? 8) : 0}/8</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Duty Thermal:</span>
+                  <span className="text-amber-400 font-bold">{anyHeaterRunning ? '24.0 kW' : '0.0 kW'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => setActiveDrawer({
+                id: 'CLEANROOM',
+                title: 'Cleanroom Suite 101',
+                subtitle: 'ISO Class 7 Controlled Environment',
+                status: 'ON',
+                quality: 'GOOD',
+                type: 'room',
+                metrics: [
+                  { label: 'Space Temperature', value: `${systemState?.temperatures?.current_c ?? 24.4}`, unit: '°C' },
+                  { label: 'Relative Humidity', value: `${systemState?.humidity?.current_rh ?? 48.5}`, unit: '%' },
+                  { label: 'Positive Pressure DP', value: '+24.8', unit: 'Pa' },
+                  { label: 'CO2 Concentration', value: '485', unit: 'ppm' }
+                ]
+              })}
+              className="surface-panel rounded-2xl p-5 border border-white/10 cursor-pointer transition-all hover:scale-[1.02]"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Gauge className="w-5 h-5" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  +25 Pa CASCADE
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-white font-mono">CLEANROOM 101</h3>
+              <p className="text-xs text-slate-400 font-mono mt-0.5">Target Conditioned Space</p>
+              <div className="mt-4 pt-3 border-t border-white/5 space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Room Temp:</span>
+                  <span className="text-white font-bold">{systemState?.temperatures?.current_c ?? 24.4}°C</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Relative Humidity:</span>
+                  <span className="text-emerald-400 font-bold">{systemState?.humidity?.current_rh ?? 48.5}%</span>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          /* View 2: Detailed Mechanical Engineering Schematic (Light Mode) */
-          <div className="relative w-full overflow-x-auto bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 shadow-inner">
+          <div className="relative w-full overflow-x-auto surface-well rounded-2xl p-4 border border-white/10 shadow-inner">
             <svg 
-              viewBox="0 0 980 440" 
-              className="w-full h-auto min-w-[850px] max-h-[500px] select-none" 
+              viewBox="0 0 1000 480" 
+              className="w-full h-auto min-w-[900px] select-none" 
               preserveAspectRatio="xMidYMid meet"
             >
               <defs>
-                <linearGradient id="coolFlowGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#0284C7" />
-                  <stop offset="100%" stopColor="#38BDF8" />
+                <linearGradient id="pipeCyanGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#0891B2" />
+                  <stop offset="100%" stopColor="#06B6D4" />
                 </linearGradient>
-                <linearGradient id="warmFlowGrad" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#F59E0B" />
+                <linearGradient id="pipeWarmGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#D97706" />
                   <stop offset="100%" stopColor="#EF4444" />
                 </linearGradient>
+                <filter id="sapphireGlow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
               </defs>
 
-              {/* 6 Outdoor Units on the Left */}
-              <g id="odu-bank-group" transform="translate(20, 20)">
-                <text x="75" y="10" fill="#475569" fontSize="11" fontWeight="bold" textAnchor="middle">
-                  6 OUTDOOR UNITS (ODU 1-6)
+              <g id="grid-background" opacity="0.15">
+                <path d="M 0 60 L 1000 60 M 0 120 L 1000 120 M 0 180 L 1000 180 M 0 240 L 1000 240 M 0 300 L 1000 300 M 0 360 L 1000 360 M 0 420 L 1000 420" stroke="#334155" strokeWidth="1" />
+                <path d="M 100 0 L 100 480 M 200 0 L 200 480 M 300 0 L 300 480 M 400 0 L 400 480 M 500 0 L 500 480 M 600 0 L 600 480 M 700 0 L 700 480 M 800 0 L 800 480 M 900 0 L 900 480" stroke="#334155" strokeWidth="1" />
+              </g>
+
+              <g id="odu-condenser-bank" transform="translate(20, 30)">
+                <text x="80" y="10" fill="#94A3B8" fontSize="10" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                  VRF CONDENSER BANK (6 UNITS)
                 </text>
 
                 {[0, 1, 2, 3, 4, 5].map((idx) => {
                   const col = idx % 2;
                   const row = Math.floor(idx / 2);
-                  const x = col * 85;
-                  const y = 25 + row * 115;
+                  const x = col * 82;
+                  const y = 20 + row * 95;
                   const odu = odus[idx];
                   const effectiveState = localOduStates[odu?.id ?? `ODU-0${idx + 1}`] ?? (odu?.state ?? 'OFF');
                   const isOn = effectiveState === 'ON';
@@ -447,351 +498,299 @@ export function SystemOverview({
                     <g 
                       key={idx} 
                       transform={`translate(${x}, ${y})`}
-                      className="transition-transform duration-300 hover:scale-105 cursor-pointer"
-                      onClick={(e) => odu && handleToggleOdu(odu.id, odu.state, e)}
-                      onMouseEnter={() => setHoveredComponent({
-                        id: `ODU-0${idx + 1}`,
-                        title: `Outdoor Condenser ODU-${idx + 1}`,
-                        subtitle: `Circuit ${(idx % 3) + 1}`,
-                        status: isOn ? 'ON' : 'OFF',
-                        type: 'odu',
-                        metrics: [
-                          { label: 'Fan Speed', value: isOn ? '820' : '0', unit: 'RPM' },
-                          { label: 'Power Consumption', value: isOn ? '18.0' : '0.0', unit: 'kW' },
-                          { label: 'Refrigerant Temp', value: `${odu?.temp_c ?? 32.5}`, unit: '°C' }
-                        ]
-                      })}
-                      onMouseLeave={() => setHoveredComponent(null)}
+                      className="cursor-pointer transition-transform duration-200 hover:scale-105"
+                      onClick={(e) => handleToggleOdu(odu?.id ?? `ODU-0${idx + 1}`, effectiveState, e)}
                     >
                       <rect 
                         x="0" 
                         y="0" 
-                        width="76" 
-                        height="100" 
-                        fill="#FFFFFF" 
-                        stroke={isOn ? "#0284C7" : "#CBD5E1"} 
+                        width="74" 
+                        height="82" 
+                        rx="8" 
+                        fill={isOn ? '#0F172A' : '#020617'} 
+                        stroke={isOn ? '#06B6D4' : '#334155'} 
                         strokeWidth="1.5" 
-                        rx="10" 
-                        filter="drop-shadow(0 2px 4px rgba(0,0,0,0.04))"
                       />
-                      <rect x="6" y="6" width="64" height="16" fill="#F1F5F9" rx="4" />
-                      <text x="38" y="18" fill="#1E293B" fontSize="9" fontWeight="bold" textAnchor="middle" fontFamily="JetBrains Mono">
-                        ODU-{idx + 1}
-                      </text>
-                      
-                      {/* Fan Grille */}
-                      <circle cx="38" cy="56" r="24" fill="#F8FAFC" stroke={isOn ? "#38BDF8" : "#E2E8F0"} strokeWidth="1.5" />
-                      
-                      {/* Spinning Fan Blades */}
+                      <circle cx="37" cy="38" r="22" fill="#020617" stroke={isOn ? '#06B6D4' : '#475569'} strokeWidth="1" />
                       <g 
-                        transform="translate(38, 56)" 
-                        className={isOn ? "animate-fan" : ""}
+                        transform="translate(37, 38)" 
+                        className={isOn ? "spin-fast" : ""}
                         style={{ transformOrigin: '0px 0px' }}
                       >
-                        <circle cx="0" cy="0" r="4" fill={isOn ? "#0284C7" : "#94A3B8"} />
-                        <path d="M 0 0 C 6 -10, 15 -8, 14 0 C 12 5, 5 5, 0 0" fill={isOn ? "#0284C7" : "#94A3B8"} />
-                        <path d="M 0 0 C 10 6, 8 15, 0 14 C -5 12, -5 5, 0 0" fill={isOn ? "#0284C7" : "#94A3B8"} />
-                        <path d="M 0 0 C -6 10, -15 8, -14 0 C -12 -5, -5 -5, 0 0" fill={isOn ? "#0284C7" : "#94A3B8"} />
-                        <path d="M 0 0 C -10 -6, -8 -15, 0 -14 C 5 -12, 5 -5, 0 0" fill={isOn ? "#0284C7" : "#94A3B8"} />
+                        <path d="M 0 0 C 8 -16, 20 -8, 0 0" fill={isOn ? '#06B6D4' : '#64748B'} />
+                        <path d="M 0 0 C 16 8, 8 20, 0 0" fill={isOn ? '#06B6D4' : '#64748B'} />
+                        <path d="M 0 0 C -8 16, -20 8, 0 0" fill={isOn ? '#06B6D4' : '#64748B'} />
+                        <path d="M 0 0 C -16 -8, -8 -20, 0 0" fill={isOn ? '#06B6D4' : '#64748B'} />
+                        <circle cx="0" cy="0" r="4" fill="#FFFFFF" />
                       </g>
-
-                      {/* Status indicator dot */}
-                      <circle cx="66" cy="14" r="3.5" fill={isOn ? "#10B981" : "#EF4444"} />
-                      <text x="38" y="92" fill={isOn ? "#10B981" : "#64748B"} fontSize="8" fontWeight="bold" textAnchor="middle" fontFamily="JetBrains Mono">
-                        {isOn ? "RUNNING" : "STANDBY"}
+                      <text x="37" y="14" fill="#E2E8F0" fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                        ODU-0{idx + 1}
+                      </text>
+                      <text x="37" y="74" fill={isOn ? '#22C55E' : '#94A3B8'} fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                        {isOn ? '18.2 kW' : 'STANDBY'}
                       </text>
                     </g>
                   );
                 })}
               </g>
 
-              {/* Refrigerant Manifold Pipes connecting ODUs to AHU */}
-              <g id="manifold-lines">
-                <path d="M 180 80 L 260 80 L 260 170 L 330 170" fill="none" stroke="#0284C7" strokeWidth="2.5" strokeDasharray="6 4" className={ahuOnline ? "animate-flow" : ""} />
-                <path d="M 180 195 L 260 195 L 260 215 L 330 215" fill="none" stroke="#0284C7" strokeWidth="2.5" strokeDasharray="6 4" className={ahuOnline ? "animate-flow" : ""} />
-                <path d="M 180 310 L 260 310 L 260 250 L 330 250" fill="none" stroke="#0284C7" strokeWidth="2.5" strokeDasharray="6 4" className={ahuOnline ? "animate-flow" : ""} />
+              <g id="dx-refrigerant-headers">
+                <path d="M 180 80 L 260 80 L 260 180 L 350 180" fill="none" stroke="#0F172A" strokeWidth="10" strokeLinejoin="round" />
+                <path d="M 180 80 L 260 80 L 260 180 L 350 180" fill="none" stroke="#06B6D4" strokeWidth="3" strokeDasharray="6 4" className="flow-anim" />
 
-                <circle cx="280" cy="170" r="10" fill="#FFFFFF" stroke="#0284C7" strokeWidth="1.5" />
-                <text x="280" y="174" fill="#0284C7" fontSize="8" fontWeight="bold" textAnchor="middle">T</text>
+                <path d="M 180 180 L 260 180" fill="none" stroke="#06B6D4" strokeWidth="3" strokeDasharray="6 4" className="flow-anim" />
+                <path d="M 180 270 L 260 270 L 260 180" fill="none" stroke="#06B6D4" strokeWidth="3" strokeDasharray="6 4" className="flow-anim" />
+
+                <rect x="220" y="165" width="55" height="28" rx="6" fill="#0F172A" stroke="#06B6D4" strokeWidth="1" />
+                <text x="247" y="178" fill="#94A3B8" fontSize="7" fontFamily="JetBrains Mono" textAnchor="middle">HEAD PRESS</text>
+                <text x="247" y="188" fill="#06B6D4" fontSize="9" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">1.85 MPa</text>
               </g>
 
-              {/* Main AHU Casing Box */}
-              <g id="ahu-casing" transform="translate(330, 80)">
+              <g id="ahu-main-casing" transform="translate(350, 90)">
                 <rect 
                   x="0" 
                   y="0" 
-                  width="410" 
-                  height="230" 
-                  fill="#FFFFFF" 
-                  stroke="#94A3B8" 
-                  strokeWidth="2" 
+                  width="380" 
+                  height="170" 
                   rx="12" 
-                  filter="drop-shadow(0 4px 12px rgba(0,0,0,0.06))"
+                  fill="#0B132B" 
+                  stroke="#38BDF8" 
+                  strokeWidth="2" 
+                  strokeDasharray="none"
+                  filter="url(#sapphireGlow)"
                 />
-                
-                <text x="205" y="24" fill="#1E293B" fontSize="12" fontWeight="bold" textAnchor="middle">
-                  AIR HANDLING UNIT (AHU-01)
+                <text x="190" y="22" fill="#E2E8F0" fontSize="11" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                  AHU-01 CLEANROOM AIR HANDLER
                 </text>
 
-                {/* Filter Section */}
-                <g 
-                  transform="translate(20, 45)" 
-                  className="cursor-pointer"
-                  onMouseEnter={() => setHoveredComponent({
-                    id: 'FILTER',
-                    title: 'Air Filtration Section',
-                    subtitle: 'Pre-Filter & HEPA Bank',
-                    status: 'ON',
-                    type: 'filter',
-                    metrics: [
-                      { label: 'Differential Pressure', value: '120', unit: 'Pa' },
-                      { label: 'Efficiency Rating', value: '99.97%', unit: 'DOP' },
-                      { label: 'Filter State', value: 'Clean', unit: '' }
-                    ]
-                  })}
-                  onMouseLeave={() => setHoveredComponent(null)}
-                >
-                  <rect x="0" y="0" width="40" height="150" fill="#F8FAFC" stroke="#CBD5E1" rx="4" />
-                  <line x1="8" y1="15" x2="32" y2="35" stroke="#64748B" strokeWidth="2" />
-                  <line x1="8" y1="45" x2="32" y2="65" stroke="#64748B" strokeWidth="2" />
-                  <line x1="8" y1="75" x2="32" y2="95" stroke="#64748B" strokeWidth="2" />
-                  <line x1="8" y1="105" x2="32" y2="125" stroke="#64748B" strokeWidth="2" />
-                  <text x="20" y="165" fill="#64748B" fontSize="8" fontWeight="bold" textAnchor="middle">FILTERS</text>
-
-                  <circle cx="20" cy="-14" r="9" fill="#FFFFFF" stroke="#64748B" strokeWidth="1.5" />
-                  <text x="20" y="-11" fill="#64748B" fontSize="7" fontWeight="bold" textAnchor="middle">DP</text>
+                <g transform="translate(20, 40)">
+                  <rect x="0" y="0" width="30" height="100" rx="4" fill="#020617" stroke="#475569" strokeWidth="1" />
+                  <path d="M 5 10 L 25 25 M 5 35 L 25 50 M 5 60 L 25 75 M 5 85 L 25 95" stroke="#94A3B8" strokeWidth="2" />
+                  <text x="15" y="115" fill="#94A3B8" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">PRE-FLT</text>
+                  <rect x="0" y="122" width="30" height="16" rx="3" fill="#0F172A" stroke="#22C55E" strokeWidth="1" />
+                  <text x="15" y="133" fill="#22C55E" fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">45 Pa</text>
                 </g>
 
-                {/* Direct Expansion (DX) Cooling Coils */}
-                <g 
-                  transform="translate(85, 45)" 
-                  className="cursor-pointer"
-                  onMouseEnter={() => setHoveredComponent({
-                    id: 'COOLING_COIL',
-                    title: 'Direct Expansion (DX) Cooling Coils',
-                    subtitle: 'Linked to 6 Condensing Units',
-                    status: ahuOnline ? 'ON' : 'OFF',
-                    type: 'coil',
-                    metrics: [
-                      { label: 'Active Circuits', value: `${odus.filter(o => o.state === 'ON').length}/6`, unit: '' },
-                      { label: 'Supply Leaving Temp', value: `${systemState?.temperatures?.supply_c ?? 18.2}`, unit: '°C' },
-                      { label: 'Sensible Cooling Capacity', value: '108.0', unit: 'kW' }
-                    ]
-                  })}
-                  onMouseLeave={() => setHoveredComponent(null)}
-                >
-                  <rect x="0" y="0" width="55" height="150" fill="#F0F9FF" stroke="#0284C7" strokeWidth="1.5" rx="6" />
-                  <path d="M 12 15 L 42 15 L 42 45 L 12 45 L 12 75 L 42 75 L 42 105 L 12 105 L 12 135 L 42 135" fill="none" stroke="#0284C7" strokeWidth="3" strokeLinecap="round" />
-                  <text x="27" y="165" fill="#0284C7" fontSize="8" fontWeight="bold" textAnchor="middle">COOL COIL</text>
-
-                  <circle cx="27" cy="-14" r="9" fill="#FFFFFF" stroke="#0284C7" strokeWidth="1.5" />
-                  <text x="27" y="-11" fill="#0284C7" fontSize="8" fontWeight="bold" textAnchor="middle">T</text>
+                <g transform="translate(70, 40)">
+                  <rect x="0" y="0" width="45" height="100" rx="4" fill="#020617" stroke="#06B6D4" strokeWidth="1.5" />
+                  <path d="M 10 10 L 35 10 L 10 30 L 35 30 L 10 50 L 35 50 L 10 70 L 35 70 L 10 90 L 35 90" fill="none" stroke="#06B6D4" strokeWidth="2" />
+                  <text x="22" y="115" fill="#06B6D4" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">DX COIL</text>
+                  <text x="22" y="133" fill="#FFFFFF" fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">12.8°C</text>
                 </g>
 
-                {/* Electric Heater Bank Section */}
-                <g 
-                  transform="translate(165, 45)" 
-                  className="cursor-pointer transition-transform duration-200 hover:scale-102"
-                  onClick={handleToggleHeaterBank}
-                  onMouseEnter={() => setHoveredComponent({
-                    id: 'HEATER_BANK',
-                    title: 'Electric Heating Element Bank',
-                    subtitle: '8 Staged Reheat Elements · Click to Toggle',
-                    status: anyHeaterRunning ? 'ON' : 'OFF',
-                    type: 'heater',
-                    metrics: [
-                      { label: 'Stages Active', value: `${anyHeaterRunning ? (systemState?.heater_summary?.running ?? 8) : 0}/8`, unit: '' },
-                      { label: 'Heating Duty', value: `${anyHeaterRunning ? (((systemState?.heater_summary?.running ?? 8) * 3.0).toFixed(1)) : '0.0'}`, unit: 'kW' },
-                      { label: 'Element Temperature', value: anyHeaterRunning ? '52.5' : '24.0', unit: '°C' }
-                    ]
-                  })}
-                  onMouseLeave={() => setHoveredComponent(null)}
-                >
-                  <rect x="0" y="0" width="55" height="150" fill="#FFFBEB" stroke="#F59E0B" strokeWidth="1.5" rx="6" />
-                  {[18, 48, 78, 108, 132].map((yVal, i) => (
-                    <g key={i} transform={`translate(15, ${yVal})`}>
-                      <path d="M 0 0 Q 6 -5, 12 0 T 24 0" fill="none" stroke={anyHeaterRunning ? "#EA580C" : "#CBD5E1"} strokeWidth="2.5" />
-                      <circle cx="28" cy="-1" r="2" fill={anyHeaterRunning ? "#EA580C" : "#CBD5E1"} />
-                    </g>
+                <g transform="translate(135, 40)">
+                  <rect x="0" y="0" width="35" height="100" rx="4" fill="#020617" stroke="#475569" strokeWidth="1" />
+                  <path d="M 5 5 L 30 15 L 5 25 L 30 35 L 5 45 L 30 55 L 5 65 L 30 75 L 5 85 L 30 95" stroke="#38BDF8" strokeWidth="1.5" />
+                  <text x="17" y="115" fill="#94A3B8" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">HEPA</text>
+                  <rect x="2" y="122" width="31" height="16" rx="3" fill="#0F172A" stroke="#22C55E" strokeWidth="1" />
+                  <text x="17" y="133" fill="#22C55E" fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">120 Pa</text>
+                </g>
+
+                <g transform="translate(195, 40)">
+                  <rect 
+                    x="0" 
+                    y="0" 
+                    width="55" 
+                    height="100" 
+                    rx="4" 
+                    fill={anyHeaterRunning ? '#1E1B18' : '#020617'} 
+                    stroke={anyHeaterRunning ? '#F59E0B' : '#475569'} 
+                    strokeWidth="1.5" 
+                  />
+                  {[15, 35, 55, 75].map((yPos, i) => (
+                    <path 
+                      key={i} 
+                      d={`M 8 ${yPos} Q 27 ${yPos - 8} 47 ${yPos}`} 
+                      fill="none" 
+                      stroke={anyHeaterRunning ? '#EF4444' : '#64748B'} 
+                      strokeWidth="2.5" 
+                    />
                   ))}
-                  <text x="27" y="165" fill="#D97706" fontSize="8" fontWeight="bold" textAnchor="middle">HEATERS</text>
+                  <text x="27" y="115" fill="#F59E0B" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">8-STAGE</text>
+                  <rect x="5" y="122" width="45" height="16" rx="3" fill="#0F172A" stroke="#F59E0B" strokeWidth="1" />
+                  <text x="27" y="133" fill="#F59E0B" fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">24.0 kW</text>
                 </g>
 
-                {/* Supply Air Centrifugal Fan */}
                 <g 
-                  transform="translate(265, 45)" 
-                  className="cursor-pointer transition-transform duration-200 hover:scale-102"
+                  transform="translate(275, 40)" 
+                  className="cursor-pointer"
                   onClick={handleToggleAhu}
-                  onMouseEnter={() => setHoveredComponent({
-                    id: 'SUPPLY_FAN',
-                    title: 'Direct-Drive Supply Blower',
-                    subtitle: 'Centrifugal Backward-Curved Fan · Click to Toggle',
-                    status: ahuOnline ? 'ON' : 'OFF',
-                    type: 'fan',
-                    metrics: [
-                      { label: 'Airflow Delivery', value: ahuOnline ? '14,500' : '0', unit: 'CFM' },
-                      { label: 'VFD Speed', value: ahuOnline ? '50.0' : '0.0', unit: 'Hz' },
-                      { label: 'Static Pressure', value: ahuOnline ? '480' : '0', unit: 'Pa' }
-                    ]
-                  })}
-                  onMouseLeave={() => setHoveredComponent(null)}
                 >
-                  <circle cx="55" cy="75" r="50" fill="#F8FAFC" stroke="#64748B" strokeWidth="2" />
+                  <circle cx="45" cy="50" r="42" fill="#020617" stroke={ahuOnline ? '#06B6D4' : '#475569'} strokeWidth="2" />
                   <g 
-                    transform="translate(55, 75)" 
-                    className={ahuOnline ? "animate-fan" : ""}
+                    transform="translate(45, 50)" 
+                    className={ahuOnline ? "spin-fast" : ""}
                     style={{ transformOrigin: '0px 0px' }}
                   >
-                    <path d="M 0 0 C 15 -35, 40 -15, 0 0" fill="#0284C7" opacity="0.8" />
-                    <path d="M 0 0 C 35 15, 15 40, 0 0" fill="#0284C7" opacity="0.8" />
-                    <path d="M 0 0 C -15 35, -40 15, 0 0" fill="#0284C7" opacity="0.8" />
-                    <path d="M 0 0 C -35 -15, -15 -40, 0 0" fill="#0284C7" opacity="0.8" />
-                    <circle cx="0" cy="0" r="10" fill="#0284C7" />
+                    <path d="M 0 0 C 12 -30, 35 -12, 0 0" fill={ahuOnline ? '#06B6D4' : '#64748B'} opacity="0.9" />
+                    <path d="M 0 0 C 30 12, 12 35, 0 0" fill={ahuOnline ? '#06B6D4' : '#64748B'} opacity="0.9" />
+                    <path d="M 0 0 C -12 30, -35 12, 0 0" fill={ahuOnline ? '#06B6D4' : '#64748B'} opacity="0.9" />
+                    <path d="M 0 0 C -30 -12, -12 -35, 0 0" fill={ahuOnline ? '#06B6D4' : '#64748B'} opacity="0.9" />
+                    <circle cx="0" cy="0" r="8" fill="#FFFFFF" />
                   </g>
-                  <text x="55" y="142" fill="#475569" fontSize="8" fontWeight="bold" textAnchor="middle">SUPPLY FAN</text>
+                  <text x="45" y="115" fill="#94A3B8" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">SUPPLY FAN</text>
+                  <text x="45" y="133" fill={ahuOnline ? '#22C55E' : '#94A3B8'} fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                    {ahuOnline ? '50 Hz' : 'OFF'}
+                  </text>
                 </g>
               </g>
 
-              {/* Supply Air Ductwork into Cleanroom Suite */}
-              <g id="ducts-and-diffusers">
-                <path 
-                  d="M 700 160 L 770 160 L 770 120 L 810 120" 
-                  fill="none" 
-                  stroke="#94A3B8" 
-                  strokeWidth="14" 
-                  strokeLinejoin="round" 
-                />
-                <path 
-                  d="M 700 160 L 770 160 L 770 120 L 810 120" 
-                  fill="none" 
-                  stroke="#0284C7" 
-                  strokeWidth="3" 
-                  strokeDasharray="6 4" 
-                  className={ahuOnline ? "animate-flow" : ""} 
-                />
+              <g id="supply-ductwork-to-suite">
+                <path d="M 730 175 L 810 175 L 810 130 L 840 130" fill="none" stroke="#0F172A" strokeWidth="12" strokeLinejoin="round" />
+                <path d="M 730 175 L 810 175 L 810 130 L 840 130" fill="none" stroke="#06B6D4" strokeWidth="3" strokeDasharray="6 4" className={ahuOnline ? "flow-anim" : ""} />
 
-                <path 
-                  d="M 700 160 L 770 160 L 770 280 L 810 280" 
-                  fill="none" 
-                  stroke="#94A3B8" 
-                  strokeWidth="14" 
-                  strokeLinejoin="round" 
-                />
-                <path 
-                  d="M 700 160 L 770 160 L 770 280 L 810 280" 
-                  fill="none" 
-                  stroke="#0284C7" 
-                  strokeWidth="3" 
-                  strokeDasharray="6 4" 
-                  className={ahuOnline ? "animate-flow" : ""} 
-                />
+                <path d="M 730 175 L 810 175 L 810 260 L 840 260" fill="none" stroke="#0F172A" strokeWidth="12" strokeLinejoin="round" />
+                <path d="M 730 175 L 810 175 L 810 260 L 840 260" fill="none" stroke="#06B6D4" strokeWidth="3" strokeDasharray="6 4" className={ahuOnline ? "flow-anim" : ""} />
 
-                {/* VCD Dampers */}
-                <rect x="735" y="108" width="18" height="24" fill="#FFFFFF" stroke="#0284C7" strokeWidth="1.5" rx="3" />
-                <text x="744" y="123" fill="#0284C7" fontSize="7" fontWeight="bold" textAnchor="middle">VCD</text>
+                <rect x="798" y="118" width="18" height="24" rx="4" fill="#0F172A" stroke="#06B6D4" strokeWidth="1.5" />
+                <text x="807" y="133" fill="#06B6D4" fontSize="7" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">VCD</text>
 
-                <rect x="735" y="268" width="18" height="24" fill="#FFFFFF" stroke="#0284C7" strokeWidth="1.5" rx="3" />
-                <text x="744" y="283" fill="#0284C7" fontSize="7" fontWeight="bold" textAnchor="middle">VCD</text>
+                <rect x="798" y="248" width="18" height="24" rx="4" fill="#0F172A" stroke="#06B6D4" strokeWidth="1.5" />
+                <text x="807" y="263" fill="#06B6D4" fontSize="7" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">VCD</text>
               </g>
 
-              {/* Conditioned Cleanroom Suite */}
-              <g 
-                id="room-conditioned" 
-                transform="translate(790, 75)"
-                className="cursor-pointer"
-                onMouseEnter={() => setHoveredComponent({
-                  id: 'CLEANROOM',
-                  title: 'Conditioned Cleanroom Suite',
-                  subtitle: 'ISO Class 5 Controlled Environment',
-                  status: 'ON',
-                  type: 'room',
-                  metrics: [
-                    { label: 'Room Temperature', value: `${systemState?.temperatures?.current_c ?? 24.4}`, unit: '°C' },
-                    { label: 'Target Setpoint', value: `${systemState?.temperatures?.set_point_c ?? 22.0}`, unit: '°C' },
-                    { label: 'CO2 Concentration', value: '485', unit: 'ppm' },
-                    { label: 'Cleanroom Pressure', value: '+25', unit: 'Pa' }
-                  ]
-                })}
-                onMouseLeave={() => setHoveredComponent(null)}
-              >
+              <g id="cleanroom-suite" transform="translate(840, 80)">
                 <rect 
                   x="0" 
                   y="0" 
-                  width="170" 
+                  width="140" 
                   height="260" 
-                  fill="#FFFFFF" 
-                  stroke="#94A3B8" 
-                  strokeWidth="2" 
                   rx="12" 
-                  filter="drop-shadow(0 4px 12px rgba(0,0,0,0.06))"
+                  fill="#0A1128" 
+                  stroke="#22C55E" 
+                  strokeWidth="1.5"
+                  filter="url(#sapphireGlow)"
                 />
-                <text x="85" y="24" fill="#1E293B" fontSize="11" fontWeight="bold" textAnchor="middle">
-                  CLEANROOM SUITE
+                <text x="70" y="24" fill="#E2E8F0" fontSize="10" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                  CLEANROOM 101
+                </text>
+                <text x="70" y="38" fill="#22C55E" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">
+                  ISO CLASS 7
                 </text>
 
-                {/* Ceiling Diffusers */}
-                <g transform="translate(25, 42)">
-                  <polygon points="0,0 28,0 20,12 8,12" fill="#F1F5F9" stroke="#0284C7" />
-                  <path d="M 5 15 L 0 25 M 14 15 L 14 28 M 23 15 L 28 25" stroke="#0284C7" strokeWidth="1.5" strokeDasharray="3 2" />
+                <g transform="translate(20, 50)">
+                  <polygon points="0,0 24,0 18,10 6,10" fill="#020617" stroke="#06B6D4" strokeWidth="1" />
+                  <path d="M 4 12 L 0 20 M 12 12 L 12 22 M 20 12 L 24 20" stroke="#06B6D4" strokeWidth="1.5" strokeDasharray="2 2" />
+                </g>
+                <g transform="translate(95, 50)">
+                  <polygon points="0,0 24,0 18,10 6,10" fill="#020617" stroke="#06B6D4" strokeWidth="1" />
+                  <path d="M 4 12 L 0 20 M 12 12 L 12 22 M 20 12 L 24 20" stroke="#06B6D4" strokeWidth="1.5" strokeDasharray="2 2" />
                 </g>
 
-                <g transform="translate(115, 42)">
-                  <polygon points="0,0 28,0 20,12 8,12" fill="#F1F5F9" stroke="#0284C7" />
-                  <path d="M 5 15 L 0 25 M 14 15 L 14 28 M 23 15 L 28 25" stroke="#0284C7" strokeWidth="1.5" strokeDasharray="3 2" />
-                </g>
-
-                {/* Cleanroom Sensor Readout Card */}
-                <g transform="translate(15, 105)">
-                  <rect x="0" y="0" width="140" height="135" fill="#F8FAFC" stroke="#E2E8F0" rx="8" />
-                  <text x="70" y="20" fill="#475569" fontSize="9" fontWeight="bold" textAnchor="middle">
-                    CLEANROOM SENSORS
-                  </text>
-                  
-                  <text x="12" y="44" fill="#64748B" fontSize="9">Current Temp:</text>
-                  <text x="128" y="44" fill="#0F172A" fontSize="12" fontWeight="bold" textAnchor="end" fontFamily="JetBrains Mono">
-                    {systemState?.temperatures?.current_c ?? 24.4} °C
+                <g transform="translate(10, 85)">
+                  <rect x="0" y="0" width="120" height="160" rx="8" fill="#020617" stroke="#1E293B" strokeWidth="1" />
+                  <text x="60" y="18" fill="#94A3B8" fontSize="8" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                    ROOM SENSORS
                   </text>
 
-                  <text x="12" y="70" fill="#64748B" fontSize="9">Set Point:</text>
-                  <text x="128" y="70" fill="#0284C7" fontSize="12" fontWeight="bold" textAnchor="end" fontFamily="JetBrains Mono">
-                    {systemState?.temperatures?.set_point_c ?? 22.0} °C
+                  <text x="10" y="42" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">TEMP:</text>
+                  <text x="110" y="42" fill="#FFFFFF" fontSize="11" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="end">
+                    {systemState?.temperatures?.current_c ?? 24.4}°C
                   </text>
 
-                  <text x="12" y="96" fill="#64748B" fontSize="9">Air Purity CO2:</text>
-                  <text x="128" y="96" fill="#10B981" fontSize="11" fontWeight="bold" textAnchor="end" fontFamily="JetBrains Mono">
+                  <text x="10" y="68" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">TARGET:</text>
+                  <text x="110" y="68" fill="#06B6D4" fontSize="11" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="end">
+                    {systemState?.temperatures?.set_point_c ?? 22.0}°C
+                  </text>
+
+                  <text x="10" y="94" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">RH %:</text>
+                  <text x="110" y="94" fill="#38BDF8" fontSize="11" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="end">
+                    {systemState?.humidity?.current_rh ?? 48.5}%
+                  </text>
+
+                  <text x="10" y="120" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">PRESSURE:</text>
+                  <text x="110" y="120" fill="#22C55E" fontSize="11" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="end">
+                    +24.8 Pa
+                  </text>
+
+                  <text x="10" y="146" fill="#64748B" fontSize="8" fontFamily="JetBrains Mono">CO2:</text>
+                  <text x="110" y="146" fill="#F59E0B" fontSize="11" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="end">
                     485 ppm
-                  </text>
-
-                  <text x="12" y="120" fill="#64748B" fontSize="9">Occupancy:</text>
-                  <text x="128" y="120" fill="#8B5CF6" fontSize="10" fontWeight="bold" textAnchor="end" fontFamily="JetBrains Mono">
-                    DETECTED
                   </text>
                 </g>
               </g>
 
-              {/* Return Air Recirculation Duct */}
-              <path 
-                d="M 875 335 L 875 390 L 330 390 L 330 310" 
-                fill="none" 
-                stroke="#CBD5E1" 
-                strokeWidth="14" 
-                strokeLinejoin="round" 
-              />
-              <path 
-                d="M 875 335 L 875 390 L 330 390 L 330 310" 
-                fill="none" 
-                stroke="#64748B" 
-                strokeWidth="2.5" 
-                strokeDasharray="6 4" 
-                className={ahuOnline ? "animate-flow" : ""} 
-              />
-              <text x="600" y="385" fill="#475569" fontSize="9" fontWeight="bold" textAnchor="middle">
-                RETURN AIR RECIRCULATION DUCT
-              </text>
+              <g id="return-air-duct">
+                <path d="M 910 340 L 910 420 L 360 420 L 360 260" fill="none" stroke="#0F172A" strokeWidth="12" strokeLinejoin="round" />
+                <path d="M 910 340 L 910 420 L 360 420 L 360 260" fill="none" stroke="#64748B" strokeWidth="2.5" strokeDasharray="6 4" className={ahuOnline ? "flow-anim" : ""} />
+                <text x="635" y="414" fill="#94A3B8" fontSize="9" fontWeight="bold" fontFamily="JetBrains Mono" textAnchor="middle">
+                  RECIRCULATION RETURN DUCT · 26.7°C
+                </text>
+              </g>
             </svg>
           </div>
         )}
+
+        {activeDrawer && (
+          <div className="absolute right-4 top-4 w-80 surface-panel rounded-2xl p-5 border border-cyan-500/40 shadow-2xl z-20 animate-in fade-in slide-in-from-right duration-200">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold">
+                  {activeDrawer.id} DIAGNOSTICS
+                </span>
+                <h4 className="text-sm font-bold text-white font-mono mt-0.5">
+                  {activeDrawer.title}
+                </h4>
+                <p className="text-[11px] text-slate-400 font-mono mt-0.5">{activeDrawer.subtitle}</p>
+              </div>
+              <button 
+                onClick={() => setActiveDrawer(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="surface-well rounded-xl p-3 border border-white/5 space-y-2 mb-4">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Operating Status:</span>
+                <span className={`font-bold ${activeDrawer.status === 'ON' ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  {activeDrawer.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Point Quality:</span>
+                <span className="font-bold text-emerald-400">GOOD (100%)</span>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Communication:</span>
+                <span className="text-cyan-400">BACnet/IP</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs font-mono">
+              {activeDrawer.metrics.map((m, idx) => (
+                <div key={idx} className="flex justify-between py-1 border-b border-white/5">
+                  <span className="text-slate-400">{m.label}:</span>
+                  <span className="text-white font-bold">{m.value} {m.unit}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-white/10 flex gap-2">
+              <button
+                onClick={() => {
+                  if (activeDrawer.type === 'ahu') handleToggleAhu();
+                  else if (activeDrawer.type === 'heater') handleToggleHeaterBank();
+                }}
+                className="w-full py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono transition-colors"
+              >
+                Override State
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      <TwoStepConfirmModal
+        isOpen={confirmModalState.isOpen}
+        title={confirmModalState.title}
+        targetComponent={confirmModalState.targetComponent}
+        actionDescription={confirmModalState.actionDescription}
+        requestedValue={confirmModalState.requestedValue}
+        onConfirm={executeConfirmedAction}
+        onCancel={() => setConfirmModalState((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }
