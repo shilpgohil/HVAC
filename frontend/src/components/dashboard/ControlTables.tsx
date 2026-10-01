@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Fan, Snowflake, Flame, Power, Sliders, ShieldCheck } from 'lucide-react';
+import { Fan, Snowflake, Flame, Power } from 'lucide-react';
 import { SystemState } from '@/types/hvac';
 import { toggleAhuState, toggleOduState, toggleHeaterState, updateSystemMode } from '@/lib/api';
 import { TwoStepConfirmModal } from '@/components/common/TwoStepConfirmModal';
@@ -99,95 +99,120 @@ export function ControlTables({ systemState }: ControlTablesProps) {
         setLocalAhuState(next);
         try {
           await toggleAhuState(next);
-        } catch {}
+        } catch {
+          setLocalAhuState(currentAhuState);
+        }
       }
     );
   };
 
-  const handleToggleOdu = (id: string, current: 'ON' | 'OFF') => {
-    const effective = localOduStates[id] ?? current;
-    const next = effective === 'ON' ? 'OFF' : 'ON';
-    setLocalOduStates((prev) => ({ ...prev, [id]: next }));
-    toggleOduState(id, next).catch(() => {});
-  };
-
-  const handleToggleHeater = (id: string, current: 'ON' | 'OFF') => {
-    const effective = localHeaterStates[id] ?? current;
-    const next = effective === 'ON' ? 'OFF' : 'ON';
-    setLocalHeaterStates((prev) => ({ ...prev, [id]: next }));
-    toggleHeaterState(id, next).catch(() => {});
-  };
-
-  const handleAllOdus = (target: 'ON' | 'OFF') => {
+  const handleToggleOdu = (oduId: string, currentState: 'ON' | 'OFF') => {
+    const next = currentState === 'ON' ? 'OFF' : 'ON';
     requestConfirmation(
-      'Batch Condenser Stage Override',
-      'ODU Bank (6 Units)',
-      `Set all 6 outdoor inverters to ${target}`,
-      target,
+      'Compressor Stage Change',
+      oduId,
+      `Modulate condensing circuit ${oduId} to ${next}`,
+      next,
+      async () => {
+        setLocalOduStates((prev) => ({ ...prev, [oduId]: next }));
+        try {
+          await toggleOduState(oduId, next);
+        } catch {
+          setLocalOduStates((prev) => ({ ...prev, [oduId]: currentState }));
+        }
+      }
+    );
+  };
+
+  const handleToggleHeater = (heaterId: string, currentState: 'ON' | 'OFF') => {
+    const next = currentState === 'ON' ? 'OFF' : 'ON';
+    requestConfirmation(
+      'SCR Reheat Element Cutout',
+      heaterId,
+      `Command electric trim stage ${heaterId} to ${next}`,
+      next,
+      async () => {
+        setLocalHeaterStates((prev) => ({ ...prev, [heaterId]: next }));
+        try {
+          await toggleHeaterState(heaterId, next);
+        } catch {
+          setLocalHeaterStates((prev) => ({ ...prev, [heaterId]: currentState }));
+        }
+      }
+    );
+  };
+
+  const handleAllOdus = (targetState: 'ON' | 'OFF') => {
+    requestConfirmation(
+      `Batch ODU ${targetState}`,
+      'All 6 Inverter ODUs',
+      `Command all 6 DX outdoor units to ${targetState}`,
+      targetState,
       async () => {
         const updates: Record<string, 'ON' | 'OFF'> = {};
-        odus.forEach((o) => { updates[o.id] = target; });
+        odus.forEach((o) => {
+          updates[o.id] = targetState;
+          toggleOduState(o.id, targetState).catch(() => {});
+        });
         setLocalOduStates((prev) => ({ ...prev, ...updates }));
-        for (const o of odus) {
-          toggleOduState(o.id, target).catch(() => {});
-        }
       }
     );
   };
 
-  const handleAllHeaters = (target: 'ON' | 'OFF') => {
+  const handleAllHeaters = (targetState: 'ON' | 'OFF') => {
     requestConfirmation(
-      'Batch Duct Heater Override',
-      'SCR Reheat Bank (8 Stages)',
-      `Set all 8 heating stages to ${target}`,
-      target,
+      `Batch Heater ${targetState}`,
+      'All 8 Reheat Stages',
+      `Command all 8 electric reheat stages to ${targetState}`,
+      targetState,
       async () => {
         const updates: Record<string, 'ON' | 'OFF'> = {};
-        heaters.forEach((h) => { updates[h.id] = target; });
+        heaters.forEach((h) => {
+          updates[h.id] = targetState;
+          toggleHeaterState(h.id, targetState).catch(() => {});
+        });
         setLocalHeaterStates((prev) => ({ ...prev, ...updates }));
-        for (const h of heaters) {
-          toggleHeaterState(h.id, target).catch(() => {});
-        }
       }
     );
   };
 
-  const handleModeSwitch = (mode: 'AUTO' | 'MANUAL') => {
-    setControlMode(mode);
-    updateSystemMode(mode).catch(() => {});
-  };
-
-  const activeHeatersCount = heaters.filter((h) => (localHeaterStates[h.id] ?? h.state) === 'ON').length;
   const activeOdusCount = odus.filter((o) => (localOduStates[o.id] ?? o.state) === 'ON').length;
+  const activeHeatersCount = heaters.filter((h) => (localHeaterStates[h.id] ?? h.state) === 'ON').length;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="surface-panel rounded-2xl p-5 border border-white/10 flex flex-col justify-between">
+      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
         <div>
-          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
-                <Fan className={`w-4 h-4 ${currentAhuState === 'ON' ? 'spin-fast' : ''}`} />
+              <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                <Fan className={`w-4 h-4 ${currentAhuState === 'ON' ? 'animate-spin' : ''}`} />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">AHU-01 CORE</h3>
-                <span className="text-[10px] text-slate-400 font-mono">Air Handler Controls</span>
+                <h3 className="text-xs font-bold text-slate-900 font-mono uppercase tracking-wider">AHU-01 CORE</h3>
+                <span className="text-[10px] text-slate-500 font-mono">Blower &amp; Damper VFD</span>
               </div>
             </div>
 
-            <div className="flex items-center p-0.5 surface-well rounded-lg border border-white/10 text-[10px] font-mono">
+            <div className="p-0.5 bg-slate-100 border border-slate-200 rounded-lg flex items-center text-[10px] font-mono">
               <button
-                onClick={() => handleModeSwitch('AUTO')}
-                className={`px-2 py-0.5 rounded transition-colors ${
-                  controlMode === 'AUTO' ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30' : 'text-slate-400'
+                onClick={() => {
+                  setControlMode('AUTO');
+                  updateSystemMode('Auto').catch(() => {});
+                }}
+                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                  controlMode === 'AUTO' ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80' : 'text-slate-500'
                 }`}
               >
                 AUTO
               </button>
               <button
-                onClick={() => handleModeSwitch('MANUAL')}
-                className={`px-2 py-0.5 rounded transition-colors ${
-                  controlMode === 'MANUAL' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400'
+                onClick={() => {
+                  setControlMode('MANUAL');
+                  updateSystemMode('Manual').catch(() => {});
+                }}
+                className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                  controlMode === 'MANUAL' ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80' : 'text-slate-500'
                 }`}
               >
                 MANUAL
@@ -196,15 +221,15 @@ export function ControlTables({ systemState }: ControlTablesProps) {
           </div>
 
           <div className="space-y-4 text-xs font-mono">
-            <div className="surface-well rounded-xl p-3 border border-white/5 space-y-2">
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">Primary Power:</span>
+                <span className="text-slate-500">Primary Power:</span>
                 <button
                   onClick={handleToggleAhu}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer ${
                     currentAhuState === 'ON'
-                      ? 'bg-emerald-500 text-slate-950 shadow-md'
-                      : 'bg-slate-800 text-slate-400 border border-white/10'
+                      ? 'bg-emerald-500 text-white shadow-xs'
+                      : 'bg-slate-200 text-slate-600 border border-slate-300'
                   }`}
                 >
                   <Power className="w-3 h-3" />
@@ -212,19 +237,19 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                 </button>
               </div>
               <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-400">Airflow Rate:</span>
-                <span className="text-white font-bold">{currentAhuState === 'ON' ? ahu.airflow_cfm : 0} CFM</span>
+                <span className="text-slate-500">Airflow Rate:</span>
+                <span className="text-slate-900 font-bold">{currentAhuState === 'ON' ? ahu.airflow_cfm.toLocaleString() : 0} CFM</span>
               </div>
               <div className="flex justify-between items-center text-[11px]">
-                <span className="text-slate-400">HEPA Differential DP:</span>
-                <span className="text-cyan-400 font-bold">{currentAhuState === 'ON' ? ahu.filter_dp_pa : 0} Pa</span>
+                <span className="text-slate-500">HEPA Differential DP:</span>
+                <span className="text-blue-600 font-bold">{currentAhuState === 'ON' ? ahu.filter_dp_pa : 0} Pa</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex justify-between text-[11px]">
-                <span className="text-slate-400">VFD Frequency Target:</span>
-                <span className="text-cyan-400 font-bold">{vfdFrequency.toFixed(1)} Hz</span>
+                <span className="text-slate-500">VFD Frequency Target:</span>
+                <span className="text-blue-600 font-bold">{vfdFrequency.toFixed(1)} Hz</span>
               </div>
               <input
                 type="range"
@@ -233,9 +258,9 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                 step="0.5"
                 value={vfdFrequency}
                 onChange={(e) => setVfdFrequency(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <div className="flex justify-between text-[9px] text-slate-500">
+              <div className="flex justify-between text-[9px] text-slate-400">
                 <span>20 Hz (Min)</span>
                 <span>50 Hz (Rated)</span>
                 <span>60 Hz (Max)</span>
@@ -244,8 +269,8 @@ export function ControlTables({ systemState }: ControlTablesProps) {
 
             <div className="space-y-1.5">
               <div className="flex justify-between text-[11px]">
-                <span className="text-slate-400">Outdoor Damper Position:</span>
-                <span className="text-sky-400 font-bold">{damperPosition}%</span>
+                <span className="text-slate-500">Outdoor Damper Position:</span>
+                <span className="text-sky-600 font-bold">{damperPosition}%</span>
               </div>
               <input
                 type="range"
@@ -254,9 +279,9 @@ export function ControlTables({ systemState }: ControlTablesProps) {
                 step="5"
                 value={damperPosition}
                 onChange={(e) => setDamperPosition(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-500"
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
               />
-              <div className="flex justify-between text-[9px] text-slate-500">
+              <div className="flex justify-between text-[9px] text-slate-400">
                 <span>0% (Closed)</span>
                 <span>35% (Econ)</span>
                 <span>100% (Purge)</span>
@@ -265,44 +290,44 @@ export function ControlTables({ systemState }: ControlTablesProps) {
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
           <span>Interlock: CLOSED</span>
-          <span className="text-emerald-400">READY</span>
+          <span className="text-emerald-600 font-bold">READY</span>
         </div>
       </div>
 
-      <div className="surface-panel rounded-2xl p-5 border border-white/10 flex flex-col justify-between">
+      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
         <div>
-          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400">
+              <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-600">
                 <Snowflake className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">ODU INVERTERS</h3>
-                <span className="text-[10px] text-slate-400 font-mono">VRF Condenser Bank</span>
+                <h3 className="text-xs font-bold text-slate-900 font-mono uppercase tracking-wider">ODU INVERTERS</h3>
+                <span className="text-[10px] text-slate-500 font-mono">VRF Condenser Bank</span>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleAllOdus('ON')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 transition-colors"
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors cursor-pointer"
               >
                 ALL ON
               </button>
               <button
                 onClick={() => handleAllOdus('OFF')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono surface-well hover:bg-slate-800 text-slate-400 border border-white/10 transition-colors"
+                className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
               >
                 ALL OFF
               </button>
             </div>
           </div>
 
-          <div className="mb-3 px-3 py-1.5 surface-well rounded-xl border border-white/5 flex justify-between items-center text-xs font-mono">
-            <span className="text-slate-400">Active Staging:</span>
-            <span className="text-blue-400 font-bold">{activeOdusCount} / {odus.length} Active</span>
+          <div className="mb-3 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs font-mono">
+            <span className="text-slate-500">Active Staging:</span>
+            <span className="text-blue-700 font-bold">{activeOdusCount} / {odus.length} Active</span>
           </div>
 
           <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
@@ -312,22 +337,22 @@ export function ControlTables({ systemState }: ControlTablesProps) {
               return (
                 <div
                   key={odu.id}
-                  className="surface-well rounded-xl p-2.5 border border-white/5 flex items-center justify-between text-xs font-mono"
+                  className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/60 flex items-center justify-between text-xs font-mono"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${isOn ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`} />
-                    <span className="font-bold text-white">{odu.name}</span>
+                    <span className={`w-2 h-2 rounded-full ${isOn ? 'bg-blue-500 animate-pulse' : 'bg-slate-300'}`} />
+                    <span className="font-bold text-slate-900">{odu.name}</span>
                     <span className="text-[10px] text-slate-500">{isOn ? `${odu.power_kw} kW` : '0 kW'}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400">{isOn ? `${odu.fan_rpm} RPM` : '0 RPM'}</span>
+                    <span className="text-[10px] text-slate-500">{isOn ? `${odu.fan_rpm} RPM` : '0 RPM'}</span>
                     <button
                       onClick={() => handleToggleOdu(odu.id, odu.state)}
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                         isOn
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                          : 'surface-panel text-slate-500 border border-white/10'
+                          ? 'bg-blue-600 text-white shadow-2xs'
+                          : 'bg-slate-200 text-slate-600'
                       }`}
                     >
                       {isOn ? 'RUN' : 'OFF'}
@@ -339,44 +364,44 @@ export function ControlTables({ systemState }: ControlTablesProps) {
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
           <span>Head Pressure: 1.85 MPa</span>
-          <span className="text-blue-400">NOMINAL</span>
+          <span className="text-blue-600 font-bold">NOMINAL</span>
         </div>
       </div>
 
-      <div className="surface-panel rounded-2xl p-5 border border-white/10 flex flex-col justify-between">
+      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-col justify-between hover:border-slate-300 transition-all">
         <div>
-          <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
                 <Flame className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">8-STAGE REHEAT</h3>
-                <span className="text-[10px] text-slate-400 font-mono">SCR Duct Bank</span>
+                <h3 className="text-xs font-bold text-slate-900 font-mono uppercase tracking-wider">8-STAGE REHEAT</h3>
+                <span className="text-[10px] text-slate-500 font-mono">SCR Duct Bank</span>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleAllHeaters('ON')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-colors"
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors cursor-pointer"
               >
                 ALL ON
               </button>
               <button
                 onClick={() => handleAllHeaters('OFF')}
-                className="px-2 py-0.5 rounded text-[10px] font-mono surface-well hover:bg-slate-800 text-slate-400 border border-white/10 transition-colors"
+                className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 transition-colors cursor-pointer"
               >
                 ALL OFF
               </button>
             </div>
           </div>
 
-          <div className="mb-3 px-3 py-1.5 surface-well rounded-xl border border-white/5 flex justify-between items-center text-xs font-mono">
-            <span className="text-slate-400">Energized Stages:</span>
-            <span className="text-amber-400 font-bold">{activeHeatersCount} / {heaters.length} Active</span>
+          <div className="mb-3 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200/80 flex justify-between items-center text-xs font-mono">
+            <span className="text-slate-500">Energized Stages:</span>
+            <span className="text-amber-700 font-bold">{activeHeatersCount} / {heaters.length} Active</span>
           </div>
 
           <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
@@ -386,22 +411,22 @@ export function ControlTables({ systemState }: ControlTablesProps) {
               return (
                 <div
                   key={htr.id}
-                  className="surface-well rounded-xl p-2.5 border border-white/5 flex items-center justify-between text-xs font-mono"
+                  className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-200/60 flex items-center justify-between text-xs font-mono"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${isOn ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
-                    <span className="font-bold text-white">{htr.name}</span>
+                    <span className={`w-2 h-2 rounded-full ${isOn ? 'bg-amber-500 animate-pulse' : 'bg-slate-300'}`} />
+                    <span className="font-bold text-slate-900">{htr.name}</span>
                     <span className="text-[10px] text-slate-500">{isOn ? `${htr.power_kw} kW` : '0 kW'}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-400">{isOn ? `${htr.temp_c}°C` : '24°C'}</span>
+                    <span className="text-[10px] text-slate-500">{isOn ? `${htr.temp_c}°C` : '24°C'}</span>
                     <button
                       onClick={() => handleToggleHeater(htr.id, htr.state)}
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                         isOn
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                          : 'surface-panel text-slate-500 border border-white/10'
+                          ? 'bg-amber-500 text-white shadow-2xs'
+                          : 'bg-slate-200 text-slate-600'
                       }`}
                     >
                       {isOn ? 'ON' : 'OFF'}
@@ -413,9 +438,9 @@ export function ControlTables({ systemState }: ControlTablesProps) {
           </div>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-slate-500">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
           <span>High Limit Cutout: 85°C</span>
-          <span className="text-amber-400">ARMED</span>
+          <span className="text-amber-600 font-bold">ARMED</span>
         </div>
       </div>
 

@@ -77,7 +77,7 @@ export default function DashboardPage() {
   const hvacMotionTabs: MotionTabItem[] = [
     { 
       id: 'dashboard', 
-      label: 'Dashboard Overview', 
+      label: 'Overview', 
       icon: LayoutDashboard, 
       category: 'Master SCADA', 
       description: 'Cleanroom digital twin schematic, multi-equipment telemetry stream & active controls' 
@@ -105,14 +105,14 @@ export default function DashboardPage() {
     },
     { 
       id: 'graph', 
-      label: 'Telemetry Trends', 
+      label: 'Trends', 
       icon: TrendingUp, 
       category: 'Analytics', 
       description: '24-hour thermal equilibrium curves & relative humidity psychrometric tracking' 
     },
     { 
       id: 'alarms', 
-      label: 'Alarms & Faults', 
+      label: 'Alarms', 
       icon: AlertTriangle, 
       category: 'Safety Feed', 
       description: 'Supervisory fault logging, limit cutouts & alarm acknowledgement console', 
@@ -120,7 +120,7 @@ export default function DashboardPage() {
     },
     { 
       id: 'settings', 
-      label: 'System Settings', 
+      label: 'Settings', 
       icon: Settings, 
       category: 'Configuration', 
       description: 'Engineering thresholds, Modbus gateway configuration & PID tuning parameters' 
@@ -128,11 +128,11 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#031427] text-slate-100 flex font-sans antialiased relative selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased relative selection:bg-blue-600 selection:text-white">
       <div 
-        className="fixed inset-0 pointer-events-none -z-10 opacity-30"
+        className="fixed inset-0 pointer-events-none -z-10 opacity-40"
         style={{
-          backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)',
           backgroundSize: '24px 24px'
         }}
       />
@@ -161,13 +161,13 @@ export default function DashboardPage() {
           {activeSystem === 'electrical' ? (
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <span className="text-[11px] font-mono-numbers uppercase tracking-wider font-semibold text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-700/60">
+                <span className="text-[11px] font-mono-numbers uppercase tracking-wider font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                   Electrical Infrastructure
                 </span>
-                <span className="text-slate-600">/</span>
-                <h1 className="text-lg font-bold text-slate-100 tracking-tight">Plant Electrical Power Grid</h1>
+                <span className="text-slate-300">/</span>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">Plant Electrical Power Grid</h1>
               </div>
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 font-medium">
                 11kV Substation incomer, 2.5 MVA distribution transformer &amp; 7-feeder real-time power telemetry
               </p>
               <ElectricalMonitoringView />

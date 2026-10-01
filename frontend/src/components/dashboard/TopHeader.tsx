@@ -8,9 +8,7 @@ import {
   Command, 
   Zap, 
   Snowflake, 
-  Activity, 
   Menu,
-  Gauge,
   Thermometer,
   Wind,
   Layers,
@@ -105,29 +103,39 @@ export function TopHeader({
   const systemHealth = alarmCount > 3 ? 'CRITICAL' : (alarmCount > 0 ? 'WARNING' : 'HEALTHY');
 
   return (
-    <header className="h-16 px-4 md:px-6 surface-panel border-b border-white/10 flex items-center justify-between sticky top-0 z-40 backdrop-blur-xl">
+    <header className="h-16 px-4 md:px-6 bg-white/95 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between sticky top-0 z-40 shadow-xs">
       <div className="flex items-center gap-3 md:gap-4">
         {onToggleMobileSidebar && (
           <button
             onClick={onToggleMobileSidebar}
-            className="md:hidden p-2 rounded-xl bg-slate-900 border border-white/10 text-slate-300 hover:text-white transition-colors flex items-center justify-center cursor-pointer"
+            className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-colors flex items-center justify-center cursor-pointer"
             aria-label="Toggle navigation drawer"
           >
-            <Menu className="w-5 h-5 text-slate-300" />
+            <Menu className="w-5 h-5 text-slate-700" />
           </button>
         )}
 
-        <LivingBrandLogo systemHealth={systemHealth} size="sm" showWordmark={true} />
+        <div className="md:hidden">
+          <LivingBrandLogo systemHealth={systemHealth} size="sm" showWordmark={true} />
+        </div>
+
+        <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-500">
+          <span className="text-slate-900 font-bold text-sm tracking-tight">HVAC Command</span>
+          <span className="text-slate-300">/</span>
+          <span className="text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+            {activeSystem === 'hvac' ? 'Cleanroom Twin' : 'Electrical SLD'}
+          </span>
+        </div>
 
         <div className="relative hidden xl:flex items-center">
-          <div className="flex items-center gap-2 bg-[#020617]/80 border border-white/10 hover:border-cyan-500/40 px-3 py-1.5 rounded-xl w-60 transition-all text-xs text-slate-400 group">
-            <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-cyan-400 transition-colors" />
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-xl w-60 transition-all text-xs text-slate-600 group">
+            <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
             <input 
               type="text" 
               placeholder="Search points, registers, tags..." 
-              className="bg-transparent border-none outline-none text-slate-200 placeholder-slate-500 w-full text-xs font-sans"
+              className="bg-transparent border-none outline-none text-slate-900 placeholder-slate-400 w-full text-xs font-sans"
             />
-            <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-800 border border-white/10 text-[10px] font-mono text-slate-400 shrink-0">
+            <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-mono text-slate-500 shrink-0 shadow-2xs">
               <Command className="w-2.5 h-2.5" />
               <span>K</span>
             </div>
@@ -135,29 +143,29 @@ export function TopHeader({
         </div>
       </div>
 
-      <div className="hidden lg:flex items-center gap-4 py-1 px-3 surface-well rounded-xl border border-white/5 font-mono text-xs">
+      <div className="hidden lg:flex items-center gap-4 py-1.5 px-3.5 bg-slate-50 rounded-xl border border-slate-200/80 font-mono text-xs shadow-2xs">
         <div className="flex items-center gap-1.5">
-          <Thermometer className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-slate-400">SAT:</span>
-          <span className="font-bold text-white tabular-nums">{supplyTemp.toFixed(1)}°C</span>
+          <Thermometer className="w-3.5 h-3.5 text-blue-600" />
+          <span className="text-slate-500">SAT:</span>
+          <span className="font-bold text-slate-900 tabular-nums">{supplyTemp.toFixed(1)}°C</span>
         </div>
-        <div className="w-px h-3 bg-slate-700/60" />
+        <div className="w-px h-3.5 bg-slate-200" />
         <div className="flex items-center gap-1.5">
-          <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-          <span className="text-slate-400">RAT:</span>
-          <span className="font-bold text-white tabular-nums">{returnTemp.toFixed(1)}°C</span>
+          <Thermometer className="w-3.5 h-3.5 text-amber-600" />
+          <span className="text-slate-500">RAT:</span>
+          <span className="font-bold text-slate-900 tabular-nums">{returnTemp.toFixed(1)}°C</span>
         </div>
-        <div className="w-px h-3 bg-slate-700/60" />
+        <div className="w-px h-3.5 bg-slate-200" />
         <div className="flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="text-slate-400">LOAD:</span>
-          <span className="font-bold text-white tabular-nums">{totalPower.toFixed(1)} kW</span>
+          <Zap className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="text-slate-500">LOAD:</span>
+          <span className="font-bold text-slate-900 tabular-nums">{totalPower.toFixed(1)} kW</span>
         </div>
-        <div className="w-px h-3 bg-slate-700/60" />
+        <div className="w-px h-3.5 bg-slate-200" />
         <div className="flex items-center gap-1.5">
-          <Wind className="w-3.5 h-3.5 text-sky-400" />
-          <span className="text-slate-400">DP:</span>
-          <span className="font-bold text-white tabular-nums">{ductPressure.toFixed(0)} Pa</span>
+          <Wind className="w-3.5 h-3.5 text-indigo-600" />
+          <span className="text-slate-500">DP:</span>
+          <span className="font-bold text-slate-900 tabular-nums">{ductPressure.toFixed(0)} Pa</span>
         </div>
       </div>
 
@@ -165,19 +173,19 @@ export function TopHeader({
         <div ref={dropdownRef} className="relative">
           <button
             onClick={() => setIsScenarioDropdownOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl surface-well hover:border-cyan-500/40 border border-white/10 transition-colors text-xs font-mono text-slate-200"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-xs font-mono text-slate-700 shadow-2xs cursor-pointer"
           >
-            <Layers className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline font-semibold">Scenario:</span>
-            <span className="text-cyan-400 font-bold max-w-[120px] truncate">
+            <Layers className="w-3.5 h-3.5 text-blue-600" />
+            <span className="hidden sm:inline font-medium text-slate-500">Scenario:</span>
+            <span className="text-slate-900 font-bold max-w-[120px] truncate">
               {activeScenario?.name ?? `Scenario ${activeScenarioId}`}
             </span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {isScenarioDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-72 surface-panel rounded-xl border border-white/15 shadow-2xl p-1.5 z-50 animate-in fade-in duration-150">
-              <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 border-b border-white/10">
+            <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl border border-slate-200 shadow-xl p-1.5 z-50 animate-in fade-in duration-150">
+              <div className="px-2.5 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500 border-b border-slate-100 font-bold">
                 12 Thermodynamic Test Scenarios
               </div>
               <div className="max-h-64 overflow-y-auto space-y-0.5 mt-1">
@@ -187,16 +195,16 @@ export function TopHeader({
                     onClick={() => handleSelectScenario(sc.scenario_id)}
                     className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono flex items-center justify-between transition-colors ${
                       sc.scenario_id === activeScenarioId
-                        ? 'bg-cyan-500/15 text-cyan-300 font-bold border border-cyan-500/30'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200'
+                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <div className="truncate pr-2">
-                      <span className="text-slate-500 mr-1.5">#{sc.scenario_id}</span>
+                      <span className="text-slate-400 mr-1.5">#{sc.scenario_id}</span>
                       <span>{sc.name}</span>
                     </div>
                     {sc.scenario_id === activeScenarioId && (
-                      <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     )}
                   </button>
                 ))}
@@ -205,53 +213,53 @@ export function TopHeader({
           )}
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 surface-well border border-white/10 px-2.5 py-1 rounded-xl text-xs font-mono">
+        <div className="hidden sm:flex items-center gap-2 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl text-xs font-mono">
           <span
             className={`w-2 h-2 rounded-full ${
-              wsConnected ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'
+              wsConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
             }`}
           />
-          <span className={wsConnected ? 'text-emerald-400 font-bold' : 'text-rose-400'}>
+          <span className={wsConnected ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
             {wsConnected ? 'LIVE BUS' : 'OFFLINE'}
           </span>
         </div>
 
-        <div className="hidden md:flex items-center p-0.5 surface-well border border-white/10 rounded-xl">
+        <div className="hidden md:flex items-center p-0.5 bg-slate-100 border border-slate-200 rounded-xl">
           <button
             onClick={() => onSelectSystem('hvac')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
               activeSystem === 'hvac'
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-xs'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Snowflake className="w-3 h-3 text-cyan-400" />
+            <Snowflake className="w-3 h-3 text-blue-600" />
             <span>HVAC</span>
           </button>
           <button
             onClick={() => onSelectSystem('electrical')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
               activeSystem === 'electrical'
-                ? 'bg-blue-500/20 text-blue-300 font-bold border border-blue-500/40 shadow-xs'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Zap className="w-3 h-3 text-blue-400" />
+            <Zap className="w-3 h-3 text-amber-600" />
             <span>GRID</span>
           </button>
         </div>
 
-        <div className="text-xs font-mono text-slate-400 hidden 2xl:block">
+        <div className="text-xs font-mono text-slate-500 hidden 2xl:block">
           {timeStr}
         </div>
 
-        <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-          <div className="w-8 h-8 rounded-xl bg-slate-800/90 border border-white/10 flex items-center justify-center text-cyan-400 shadow-inner">
-            <User className="w-4 h-4" />
+        <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+          <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs">
+            <User className="w-4 h-4 text-slate-600" />
           </div>
           <div className="hidden xl:block text-left leading-tight">
-            <div className="text-xs font-bold text-slate-200">Plant Operator</div>
-            <div className="text-[10px] text-cyan-400 font-mono">Supervisory Level 3</div>
+            <div className="text-xs font-bold text-slate-900">Plant Operator</div>
+            <div className="text-[10px] text-blue-600 font-mono font-medium">Supervisory Level 3</div>
           </div>
         </div>
       </div>

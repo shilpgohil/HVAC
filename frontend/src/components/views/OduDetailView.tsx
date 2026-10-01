@@ -22,7 +22,6 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
   ];
 
   const runningCount = units.filter((u) => (localStates[u.id] ?? u.state) === 'ON').length;
-  const totalPower = units.reduce((acc, u) => acc + ((localStates[u.id] ?? u.state) === 'ON' ? u.power_kw : 0), 0);
 
   const handleToggle = async (id: string, current: 'ON' | 'OFF') => {
     const next = current === 'ON' ? 'OFF' : 'ON';
@@ -43,19 +42,19 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="surface-panel rounded-2xl p-6 border border-white/10 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 shrink-0">
-            <Snowflake className="w-7 h-7 text-blue-400" />
+          <div className="w-13 h-13 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+            <Snowflake className="w-6 h-6 text-blue-600" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-white tracking-tight font-sans">ODU Inverter Condenser Bank</h1>
-              <span className="px-3 py-0.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight font-sans">ODU Inverter Condenser Bank</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
                 {runningCount} / {units.length} Inverters Active
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-mono mt-1">
+            <p className="text-xs text-slate-500 font-sans mt-1">
               Variable Refrigerant Flow (VRF) scroll inverter condensing modules · Total DX cooling capacity
             </p>
           </div>
@@ -64,13 +63,13 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAll('ON')}
-            className="px-3.5 py-1.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs font-mono transition-colors shadow-md active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs font-mono transition-all shadow-xs active:scale-95 cursor-pointer"
           >
             All Inverters ON
           </button>
           <button
             onClick={() => handleAll('OFF')}
-            className="px-3.5 py-1.5 rounded-xl surface-well hover:bg-slate-800 text-slate-300 border border-white/10 font-bold text-xs font-mono transition-colors active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs font-mono transition-all active:scale-95 cursor-pointer"
           >
             All Inverters OFF
           </button>
@@ -85,24 +84,24 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
           return (
             <div 
               key={unit.id}
-              className={`surface-panel rounded-2xl p-5 border transition-all duration-200 ${
+              className={`rounded-2xl p-5 border transition-all duration-200 ${
                 isRunning 
-                  ? 'border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.12)]' 
-                  : 'border-white/5 opacity-65'
+                  ? 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:border-slate-300' 
+                  : 'bg-slate-50/70 border-slate-200/60 opacity-80'
               }`}
             >
-              <div className="flex items-center justify-between pb-3.5 border-b border-white/10">
+              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
                     isRunning 
-                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-400' 
-                      : 'surface-well border-white/5 text-slate-500'
+                      ? 'bg-blue-50 border-blue-200 text-blue-600' 
+                      : 'bg-slate-100 border-slate-200 text-slate-400'
                   }`}>
-                    <Fan className={`w-4.5 h-4.5 ${isRunning ? 'spin-fast text-blue-400' : 'text-slate-500'}`} />
+                    <Fan className={`w-4.5 h-4.5 ${isRunning ? 'animate-spin text-blue-600' : 'text-slate-400'}`} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white font-mono">{unit.name}</h3>
-                    <div className="text-[10px] text-slate-400 font-mono">Circuit {unit.circuit || 1}</div>
+                    <h3 className="text-sm font-bold text-slate-900 font-mono">{unit.name}</h3>
+                    <div className="text-[10px] text-slate-500 font-mono">Circuit {unit.circuit || 1}</div>
                   </div>
                 </div>
 
@@ -110,8 +109,8 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
                   onClick={() => handleToggle(unit.id, unit.state)}
                   className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 active:scale-95 ${
                     isRunning 
-                      ? 'bg-blue-500 text-slate-950 shadow-md' 
-                      : 'surface-well text-slate-400 border border-white/10'
+                      ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-2xs' 
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'
                   }`}
                 >
                   <Power className="w-2.5 h-2.5" />
@@ -119,39 +118,39 @@ export function OduDetailView({ systemState }: OduDetailViewProps) {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 py-4 border-b border-white/5 text-xs font-mono">
-                <div className="surface-well p-2.5 rounded-xl border border-white/5">
-                  <div className="text-[10px] text-slate-500 uppercase">Power Draw</div>
-                  <div className="text-base font-bold text-white mt-0.5 tabular-nums">
-                    {isRunning ? unit.power_kw.toFixed(1) : '0.0'} <span className="text-[10px] font-normal text-slate-400">kW</span>
+              <div className="grid grid-cols-2 gap-3 py-4 border-b border-slate-100 text-xs font-mono">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Power Draw</div>
+                  <div className="text-base font-bold text-slate-900 mt-0.5 tabular-nums">
+                    {isRunning ? unit.power_kw.toFixed(1) : '0.0'} <span className="text-[10px] font-normal text-slate-400 font-sans">kW</span>
                   </div>
                 </div>
 
-                <div className="surface-well p-2.5 rounded-xl border border-white/5">
-                  <div className="text-[10px] text-slate-500 uppercase">Fan Speed</div>
-                  <div className="text-base font-bold text-blue-400 mt-0.5 tabular-nums">
-                    {isRunning ? unit.fan_rpm : 0} <span className="text-[10px] font-normal text-slate-400">RPM</span>
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Fan Speed</div>
+                  <div className="text-base font-bold text-blue-600 mt-0.5 tabular-nums">
+                    {isRunning ? unit.fan_rpm : 0} <span className="text-[10px] font-normal text-slate-400 font-sans">RPM</span>
                   </div>
                 </div>
 
-                <div className="surface-well p-2.5 rounded-xl border border-white/5">
-                  <div className="text-[10px] text-slate-500 uppercase">Head Press.</div>
-                  <div className="text-base font-bold text-cyan-400 mt-0.5 tabular-nums">
-                    {unit.pressure_mpa ? unit.pressure_mpa.toFixed(2) : '1.85'} <span className="text-[10px] font-normal text-slate-400">MPa</span>
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Head Press.</div>
+                  <div className="text-base font-bold text-indigo-600 mt-0.5 tabular-nums">
+                    {unit.pressure_mpa ? unit.pressure_mpa.toFixed(2) : '1.85'} <span className="text-[10px] font-normal text-slate-400 font-sans">MPa</span>
                   </div>
                 </div>
 
-                <div className="surface-well p-2.5 rounded-xl border border-white/5">
-                  <div className="text-[10px] text-slate-500 uppercase">Coil Temp</div>
-                  <div className="text-base font-bold text-amber-400 mt-0.5 tabular-nums">
-                    {unit.temp_c.toFixed(1)} <span className="text-[10px] font-normal text-slate-400">°C</span>
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Coil Temp</div>
+                  <div className="text-base font-bold text-amber-600 mt-0.5 tabular-nums">
+                    {unit.temp_c.toFixed(1)} <span className="text-[10px] font-normal text-slate-400 font-sans">°C</span>
                   </div>
                 </div>
               </div>
 
               <div className="pt-3 flex items-center justify-between text-[11px] font-mono">
-                <span className="text-slate-400">Circuit Protection:</span>
-                <span className={isRunning ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                <span className="text-slate-500">Circuit Protection:</span>
+                <span className={isRunning ? 'text-emerald-700 font-bold' : 'text-slate-400'}>
                   {isRunning ? 'CLOSED / NORMAL' : 'STANDBY LOCKOUT'}
                 </span>
               </div>

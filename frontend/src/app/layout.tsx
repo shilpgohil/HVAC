@@ -13,17 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HVAC Digital Twin | Supervisory Operational Command Deck",
-  description: "Mission-critical digital twin and supervisory control platform for cleanroom AHU-01, 8-stage reheat bank, VRF condensing units, and 11kV electrical power distribution.",
+  title: "HVAC Twin | Operational Command Platform",
+  description: "High-precision digital twin and supervisory control platform for cleanroom AHU-01, 8-stage reheat bank, VRF condensing units, and electrical telemetry.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#031427] text-slate-100">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#F8FAFC] text-slate-900">{children}</body>
     </html>
   );
 }

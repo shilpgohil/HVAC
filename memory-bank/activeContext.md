@@ -1,23 +1,23 @@
-# Active Context - HVAC Digital Twin & UI/UX Animation Core
+# Active Context - HVAC Digital Twin & UI/UX Light Craft Core
 
 ## Current Focus & Vision
-- **World-Class Frontend Renovation Complete:** Delivered GPT Astra / Claude / Fable / Linear / Apple grade interface craftsmanship for the HVAC Digital Twin in Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS v4.
-- **Deep Space Obsidian & Sapphire Frosted Glass World:** Canvas base `#031427`, elevated panels `#0F172A`/`#102034` with `backdrop-filter: blur(24px)`, subpixel 1px machined borders `rgba(255, 255, 255, 0.08)`, and specular highlights `inset 0 1px 0 0 rgba(255, 255, 255, 0.12)`.
-- **Living Brand Kinetic Logo:** Implemented 4-stage kinetic brand motion framework (`LivingBrandLogo.tsx`): Boot Reveal, Ambient Living Idle turbine spin, 3D cursor magnetic perspective tilt, and real-time plant telemetry coupling.
-- **Two-Step Safety Command Protocol:** Implemented `TwoStepConfirmModal.tsx` with interactive slide-to-confirm, 8-second auto-timeout rollback, and operator audit trail logging.
-- **Live System Schematic Screen & Vector Twin:** Pure vector SVG twin with dynamic centrifugal blower rotation tied to VFD Hz, 6 VRF condensing units with spinning fans, 8-stage reheat coils with proportional thermal glow, kinetic particle duct airflow, HEPA differential pressure gauges, and cleanroom climate telemetry.
-- **Continuous Conversation Context Auto-Sync:** Ensuring every user instruction, aesthetic preference, animation parameter, and component decision is permanently captured in memory.
+- **World-Class Light UI Design System Transformation:** Complete overhaul of the frontend design system to match high-end modern interfaces (Stripe, Linear, Apple, ui-ux-design-pro "With Skill" showcase) in Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS v4.
+- **Luminous Pearl & Pure White Canvas:** Canvas base `#F8FAFC`, elevated panels and cards `#FFFFFF`, hairline borders `#E2E8F0` / `border-slate-200/90`, soft organic multi-layer drop shadows (`shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]`), and zero dark-mode AI artifacts.
+- **High-Contrast Typographic Craft:** Deep slate headings and numerals (`#0F172A`), balanced label hierarchy (`#475569`, `#64748B`), and tabular numeric alignment (`JetBrains Mono` with `tabular-nums` and `slashed-zero`).
+- **Harmonious Accents:** Professional industrial engineering palette: Royal Blue (`#2563EB`), Emerald (`#059669`), Warm Amber (`#D97706`), Crimson (`#DC2626`). Zero neon cyan glowing sci-fi borders.
+- **Living Brand Kinetic Logo:** Light container `#F0F9FF`, border `#BAE6FD`, wordmark in `text-slate-900`, 4-stage kinetic brand motion framework with real-time turbine rotor and telemetry reactivity.
+- **Subsystem Sub-Views Completely Renovated:**
+  - `AlarmsDetailView.tsx`: Clean white cards, clear severity badges (`CRITICAL`, `WARNING`, `INFO`), acknowledge and clear event controls.
+  - `AhuDetailView.tsx`: High-contrast fan and VFD indicators, direct-drive blower controls, intake dampers, and mechanical interlocks.
+  - `OduDetailView.tsx`: 6 VRF inverter condensing circuit cards, power draw, fan speed, head pressure, and coil telemetry.
+  - `HeaterDetailView.tsx`: 8 SCR electric duct reheat stage cards, thermal duty, and solid state modulation.
+  - `TemperatureGraphView.tsx`: Psychrometric dew point telemetry and 24h thermal equilibrium curves.
+  - `SettingsDetailView.tsx`: Supervisory setpoint clamps, deadbands, and fieldbus gateway configuration.
+  - `ElectricalMonitoringView.tsx`: 4 KPI summary cards, single-line power distribution diagram (SLD), 7 feeder panels, and power factor telemetry.
+- **Safety Interlocks & Controls Preserved:** Two-step confirmation modal with slide-to-confirm, auto-timeout rollback, and supervisory operator authorization.
 - **Strict No-Comments Invariant:** Authored code contains zero boilerplate, narrative, or explanatory comments.
-
-## Active Decisions & Standards
-- Color Tokens: Deep Space Canvas (`#031427`), Elevated Sapphire Frosted Glass (`#0F172A` / `#102034`), Healthy Emerald (`#22C55E`), Warning Amber (`#F59E0B`), Critical Crimson (`#EF4444`), Active Cyan (`#06B6D4`).
-- Motion engineering: 60fps/120fps hardware-accelerated animations using `transform`, `opacity`, and custom cubic-bezier curves (`cubic-bezier(0.16, 1, 0.3, 1)`).
-- Numeric stability: Tabular monospaced numbers (`JetBrains Mono` with `tabular-nums` and `slashed-zero`).
-- Two-step safety controls: Deliberate slide-to-confirm interactions for all physical equipment modifications.
-- Multi-System Architecture: HVAC Master SCADA & Plant Electrical Power Grid (11kV / 2.5 MVA SLD) switchable in one touch.
-- Real-Time Integration: Direct WebSocket tick synchronization via `useHvacWebSocket` with fallback polling.
 
 ## Validation Status
 - Next.js 16.3.6 Turbopack production build: Passed with 0 errors.
-- UI/UX Design Pro CLI audit: Passed.
-- Strict No-Comments Invariant: Verified across all frontend components and backend services.
+- UI/UX Design Pro CLI audit: Passed with 0 errors and 0 warnings.
+- Real-Time Integration: Direct WebSocket tick synchronization via `useHvacWebSocket` with fallback polling.

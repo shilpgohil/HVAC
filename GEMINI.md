@@ -11,6 +11,7 @@
 **HVAC Digital Twin & Supervisory Control Platform** is an industrial-grade, configuration-driven software digital twin for mission-critical mechanical systems (commercial air handlers, 9-unit heater banks, VAV networks, ventilation loops, and clean space climate systems).
 
 ### The Quality Benchmark: GPT Astra, Claude, Fable, Linear, Apple
+
 - **Think Big, Build Real:** Rejects generic "AI-generated" templates, flat lifeless cards, and fake placeholder numbers.
 - **World-Class Craftsmanship:** Precision down to the subpixel — 1px machined borders, multi-layered liquid glassmorphism, 60fps/120fps hardware-accelerated animations, organic spring physics, and zero-jitter tabular telemetry.
 - **Living Brand Identity:** Master framework for ingesting and animating the platform logo with vector path drawing, glowing energy cores, kinetic turbine rotation, and real-time telemetry reactivity.
@@ -24,16 +25,16 @@ VISUALIZE (Interactive SVG Twin) ---> MONITOR (Live Telemetry & Alarms) ---> ANA
 
 ## 2. Technology Stack & Topology
 
-| Layer | Technology | Primary Responsibility |
-|---|---|---|
-| **Frontend** | Next.js 16 (App Router), React 19, TypeScript (`strict: true`), Tailwind CSS v4, Lucide | High-density industrial control room UI, interactive SVG digital twin, diagnostic drawers, kinetic animations |
-| **Typography** | `Plus Jakarta Sans` / `Inter` (UI/Labels) + `JetBrains Mono` (Telemetry/Numbers) | Tabular alignment (`tnum`, `zero`), zero layout jitter |
-| **Animation** | Hardware-accelerated CSS keyframes, SVG path manipulation, Spring physics | 60fps/120fps GPU motion (`transform`, `opacity`), fluid particles |
-| **Backend** | Python 3.12+, FastAPI, SQLAlchemy 2.0 (async), Pydantic v2 | Canonical domain state, telemetry normalization, command authorization, REST & WebSocket APIs |
-| **Database** | PostgreSQL 16+ (asyncpg) | Equipment topology, point definitions, historical telemetry, alarms, command audit log |
-| **Ingestion** | MQTT Client (`paho-mqtt` / `asyncio-mqtt`), BACnet/Modbus adapters | Protocol isolation, broker ingestion, translation to canonical points |
-| **Real-Time** | WebSockets (native FastAPI) | Low-latency, granular live point and equipment state event broadcasting |
-| **Simulation** | Thermodynamic Physics Simulator | Coupled thermal & pressure simulation, 12 test failure scenarios |
+| Layer                | Technology                                                                                | Primary Responsibility                                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Frontend**   | Next.js 16 (App Router), React 19, TypeScript (`strict: true`), Tailwind CSS v4, Lucide | High-density industrial control room UI, interactive SVG digital twin, diagnostic drawers, kinetic animations |
+| **Typography** | `Plus Jakarta Sans` / `Inter` (UI/Labels) + `JetBrains Mono` (Telemetry/Numbers)    | Tabular alignment (`tnum`, `zero`), zero layout jitter                                                    |
+| **Animation**  | Hardware-accelerated CSS keyframes, SVG path manipulation, Spring physics                 | 60fps/120fps GPU motion (`transform`, `opacity`), fluid particles                                         |
+| **Backend**    | Python 3.12+, FastAPI, SQLAlchemy 2.0 (async), Pydantic v2                                | Canonical domain state, telemetry normalization, command authorization, REST & WebSocket APIs                 |
+| **Database**   | PostgreSQL 16+ (asyncpg)                                                                  | Equipment topology, point definitions, historical telemetry, alarms, command audit log                        |
+| **Ingestion**  | MQTT Client (`paho-mqtt` / `asyncio-mqtt`), BACnet/Modbus adapters                    | Protocol isolation, broker ingestion, translation to canonical points                                         |
+| **Real-Time**  | WebSockets (native FastAPI)                                                               | Low-latency, granular live point and equipment state event broadcasting                                       |
+| **Simulation** | Thermodynamic Physics Simulator                                                           | Coupled thermal & pressure simulation, 12 test failure scenarios                                              |
 
 ---
 
@@ -52,6 +53,7 @@ VISUALIZE (Interactive SVG Twin) ---> MONITOR (Live Telemetry & Alarms) ---> ANA
 ## 4. Deep-Dive Trigger Protocol
 
 Whenever you ask the agent:
+
 - *"go through the whole codebase"*
 - *"understand all things perfectly in depth"*
 - *"make sure you have total context of the whole codebase"*
@@ -59,6 +61,7 @@ Whenever you ask the agent:
 - *"audit the entire project"*
 
 The agent is strictly bound by **[.agents/rules/full_codebase_deep_dive_protocol.md](.agents/rules/full_codebase_deep_dive_protocol.md)** to execute the **12-Point Total Context Protocol**:
+
 1. **Architecture & Metadata Invariant Audit:** Verify no equipment is hard-coded.
 2. **Three-Way Separation Audit:** Verify physical topology, visual layout, and telemetry isolation.
 3. **Point Model & Data Quality Verification:** Audit quality flags (`GOOD`, `UNCERTAIN`, `STALE`, `BAD`, `DISCONNECTED`, `UNKNOWN`).
@@ -91,7 +94,6 @@ Antigravity automatically loads all 10 specialized rule files into its active co
 
 ---
 
-
 ---
 
 ## 6. Specialized Workspace Skills Catalog (.agents/skills/)
@@ -102,12 +104,12 @@ Antigravity loads specialized workflow skills from .agents/skills/ (and global c
    - Senior-level AI design intelligence engine for data-driven, production-grade UI/UX across industrial dashboards and web platforms.
    - **Knowledge Base**: 107+ UI styles, 127+ color palettes, 107+ font pairings, 150+ reasoning rules, 150+ UX guidelines, 16 tech stacks, 1,875+ rows across 28 CSV databases.
    - **Mandatory References**: 12 craft reference files in .agents/skills/ui-ux-design-pro/references/ (Design Directions, Token Architecture, Color System, Typography, Spacing & Layout, Depth & Elevation, Component Patterns, Animation & Motion, Real-World Patterns, Accessibility WCAG 2.2, Cognitive Principles, Critique Protocol).
-   - **Integrated CLI**: 
-px -y tsx .agents/skills/ui-ux-design-pro/cli/index.ts (or scripts/design-cli.bat) with subcommands:
-     - generate <query> --stack nextjs --output design.md: Generates complete 50-950 architectural scales, 80+ CSS custom properties, modular type scales, and production-ready React/Tailwind snippets.
-     - search <query>: BM25 / Orama search across styles, colors, typography, charts, and reasoning rules.
+   - **Integrated CLI**:
+     px -y tsx .agents/skills/ui-ux-design-pro/cli/index.ts (or scripts/design-cli.bat) with subcommands:
+     - generate <query></query> --stack nextjs --output design.md: Generates complete 50-950 architectural scales, 80+ CSS custom properties, modular type scales, and production-ready React/Tailwind snippets.
+     - search <query></query>: BM25 / Orama search across styles, colors, typography, charts, and reasoning rules.
      - udit <files...>: 12-rule UI code quality, accessibility, and anti-pattern auditor.
-     - icons <query>: Top icon library search and CDN resolution.
+     - icons <query></query>: Top icon library search and CDN resolution.
 
 ---
 
@@ -116,9 +118,9 @@ px -y tsx .agents/skills/ui-ux-design-pro/cli/index.ts (or scripts/design-cli.ba
 - **Live System Schematic Screen**: Implemented based on main documents/stitch_hvac_operational_command/live_system_schematic_9_unit_heater_bank/ and system_schematic_screen_plan.txt.
 - **Design Tokens**: Standardized via ui-ux-design-pro token architecture and design_tokens_and_micro_craft.md.
 - **Interactive SVG Digital Twin**: Decoupled visual layer rendering 9-unit heater bank, supply/return loops, chilled water, and dynamic telemetry overlays.
-- **Convenient CLI Shortcut**: Run scripts/design-cli.bat <command> from the HVAC repository root.
+- **Convenient CLI Shortcut**: Run scripts/design-cli.bat <command></command> from the HVAC repository root.
 
 ---
 
-Workspace: c:\Users\BAPS\Documents\space\HVAC  
+Workspace: c:\Users\BAPS\Documents\space\HVAC
 Last updated: October 2026

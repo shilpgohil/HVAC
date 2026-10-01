@@ -58,31 +58,30 @@ export function MotionTabs({
         <div className="flex flex-wrap items-center justify-between gap-3 px-1">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-md border border-cyan-500/20">
+              <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200">
                 {activeTabMeta?.category || 'Operational Subsystem'}
               </span>
-              <span className="text-slate-600">/</span>
-              <h2 className="text-lg font-bold text-white tracking-tight font-sans">
+              <span className="text-slate-300">/</span>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight font-sans">
                 {title || activeTabMeta?.label}
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-1 font-mono">
+            <p className="text-xs text-slate-500 mt-1 font-sans font-normal">
               {subtitle || activeTabMeta?.description || 'Real-time telemetry and supervisory control loop'}
             </p>
           </div>
         </div>
       )}
 
-      <div className="p-1 rounded-2xl surface-panel border border-white/10 shadow-2xl relative overflow-x-auto select-none">
+      <div className="p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs relative overflow-x-auto select-none">
         <div ref={containerRef} className="relative flex items-center gap-1 min-w-max">
           <div
-            className="absolute top-0 bottom-0 my-auto h-[calc(100%-6px)] rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/15 border border-cyan-500/40 shadow-[0_0_16px_rgba(6,182,212,0.25)] transition-all pointer-events-none"
+            className="absolute top-0 bottom-0 my-auto h-[calc(100%-6px)] rounded-xl bg-white border border-slate-200/80 shadow-sm pointer-events-none"
             style={{
               left: `${indicatorStyle.left}px`,
               width: `${indicatorStyle.width}px`,
               opacity: indicatorStyle.opacity,
-              transitionDuration: '240ms',
-              transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'left 220ms cubic-bezier(0.16, 1, 0.3, 1), width 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease',
             }}
           />
 
@@ -95,21 +94,17 @@ export function MotionTabs({
                 key={tab.id}
                 data-tab-id={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`relative z-10 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-colors duration-150 focus:outline-none ${
+                className={`relative z-10 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono transition-colors duration-150 focus:outline-none cursor-pointer ${
                   isActive
-                    ? 'text-cyan-300 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                    ? 'text-slate-900 font-bold'
+                    : 'text-slate-600 hover:text-slate-900 font-medium'
                 }`}
               >
-                <Icon
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    isActive ? 'text-cyan-400 scale-110' : 'text-slate-500'
-                  }`}
-                />
-                <span className="tracking-tight whitespace-nowrap">{tab.label}</span>
+                <Icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                <span>{tab.label}</span>
 
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[10px] font-bold font-mono animate-pulse">
+                  <span className="flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
                     {tab.badge}
                   </span>
                 )}

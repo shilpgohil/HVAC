@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface LivingBrandLogoProps {
   systemHealth?: 'HEALTHY' | 'WARNING' | 'CRITICAL' | 'OFFLINE';
@@ -25,8 +25,8 @@ export function LivingBrandLogo({
     const deltaX = (e.clientX - centerX) / (rect.width / 2);
     const deltaY = (e.clientY - centerY) / (rect.height / 2);
     setTilt({
-      x: deltaY * -12,
-      y: deltaX * 12,
+      x: deltaY * -10,
+      y: deltaX * 10,
     });
   };
 
@@ -37,38 +37,38 @@ export function LivingBrandLogo({
 
   const dimensions = {
     sm: { icon: 32, box: 'w-8 h-8' },
-    md: { icon: 42, box: 'w-10 h-10' },
-    lg: { icon: 56, box: 'w-14 h-14' },
+    md: { icon: 40, box: 'w-10 h-10' },
+    lg: { icon: 52, box: 'w-13 h-13' },
   }[size];
 
   const colorConfig = {
     HEALTHY: {
-      primary: '#06B6D4',
-      secondary: '#22C55E',
-      glow: 'rgba(6, 182, 212, 0.4)',
-      bg: 'rgba(6, 182, 212, 0.1)',
-      border: 'rgba(6, 182, 212, 0.3)',
+      primary: '#0284C7',
+      secondary: '#059669',
+      glow: 'rgba(2, 132, 199, 0.25)',
+      bg: '#F0F9FF',
+      border: '#BAE6FD',
     },
     WARNING: {
-      primary: '#F59E0B',
-      secondary: '#FBBF24',
-      glow: 'rgba(245, 158, 11, 0.4)',
-      bg: 'rgba(245, 158, 11, 0.1)',
-      border: 'rgba(245, 158, 11, 0.3)',
+      primary: '#D97706',
+      secondary: '#F59E0B',
+      glow: 'rgba(217, 119, 6, 0.25)',
+      bg: '#FFFBEB',
+      border: '#FDE68A',
     },
     CRITICAL: {
-      primary: '#EF4444',
-      secondary: '#F87171',
-      glow: 'rgba(239, 68, 68, 0.5)',
-      bg: 'rgba(239, 68, 68, 0.12)',
-      border: 'rgba(239, 68, 68, 0.35)',
+      primary: '#DC2626',
+      secondary: '#EF4444',
+      glow: 'rgba(220, 38, 38, 0.25)',
+      bg: '#FEF2F2',
+      border: '#FECACA',
     },
     OFFLINE: {
-      primary: '#94A3B8',
-      secondary: '#64748B',
-      glow: 'rgba(148, 163, 184, 0.2)',
-      bg: 'rgba(148, 163, 184, 0.08)',
-      border: 'rgba(148, 163, 184, 0.2)',
+      primary: '#64748B',
+      secondary: '#94A3B8',
+      glow: 'rgba(100, 116, 139, 0.2)',
+      bg: '#F8FAFC',
+      border: '#E2E8F0',
     },
   }[systemHealth];
 
@@ -80,42 +80,33 @@ export function LivingBrandLogo({
       onMouseLeave={handleMouseLeave}
       className="flex items-center gap-3 select-none cursor-pointer group"
       style={{
-        perspective: '600px',
+        transform: `perspective(600px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+        transition: isHovered ? 'transform 100ms ease-out' : 'transform 400ms ease-out',
       }}
     >
       <div
-        className={`relative ${dimensions.box} rounded-xl flex items-center justify-center transition-transform duration-200 ease-out`}
+        className={`relative ${dimensions.box} rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm`}
         style={{
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${isHovered ? 1.05 : 1})`,
-          background: colorConfig.bg,
+          backgroundColor: colorConfig.bg,
           border: `1px solid ${colorConfig.border}`,
-          boxShadow: `0 0 20px -2px ${colorConfig.glow}, inset 0 1px 0 0 rgba(255, 255, 255, 0.15)`,
+          boxShadow: isHovered ? `0 4px 16px ${colorConfig.glow}` : '0 1px 3px rgba(0,0,0,0.05)',
         }}
       >
         <svg
+          viewBox="0 0 100 100"
           width={dimensions.icon}
           height={dimensions.icon}
-          viewBox="0 0 100 100"
-          fill="none"
+          className="transition-transform duration-300"
           xmlns="http://www.w3.org/2000/svg"
-          className="overflow-visible"
         >
           <circle
             cx="50"
             cy="50"
             r="44"
-            stroke={colorConfig.primary}
+            fill="none"
+            stroke={colorConfig.border}
             strokeWidth="1.5"
-            strokeDasharray="4 2"
-            strokeOpacity="0.4"
-          />
-
-          <circle
-            cx="50"
-            cy="50"
-            r="38"
-            stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth="2"
+            strokeDasharray="4 3"
           />
 
           <g
@@ -126,22 +117,18 @@ export function LivingBrandLogo({
             <path
               d="M50 50 C48 35, 36 24, 50 16 C55 24, 52 35, 50 50 Z"
               fill={colorConfig.primary}
-              fillOpacity="0.8"
             />
             <path
               d="M50 50 C65 48, 76 36, 84 50 C76 55, 65 52, 50 50 Z"
               fill={colorConfig.secondary}
-              fillOpacity="0.8"
             />
             <path
               d="M50 50 C52 65, 64 76, 50 84 C45 76, 48 65, 50 50 Z"
               fill={colorConfig.primary}
-              fillOpacity="0.8"
             />
             <path
               d="M50 50 C35 52, 24 64, 16 50 C24 45, 35 48, 50 50 Z"
               fill={colorConfig.secondary}
-              fillOpacity="0.8"
             />
           </g>
 
@@ -149,17 +136,15 @@ export function LivingBrandLogo({
             <path
               d="M26 30 C34 22, 46 20, 56 22"
               stroke={colorConfig.primary}
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
-              strokeOpacity="0.7"
               className="flow-anim"
             />
             <path
               d="M74 70 C66 78, 54 80, 44 78"
               stroke={colorConfig.secondary}
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
-              strokeOpacity="0.7"
               className="flow-anim"
             />
           </g>
@@ -170,28 +155,26 @@ export function LivingBrandLogo({
             cy="50"
             r="7"
             fill="#FFFFFF"
+            stroke={colorConfig.primary}
+            strokeWidth="2"
             style={{
-              filter: `drop-shadow(0 0 6px ${colorConfig.primary})`,
+              filter: `drop-shadow(0 1px 3px ${colorConfig.glow})`,
             }}
           />
         </svg>
-
-        <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none">
-          <div className="w-full h-full animate-sheen" />
-        </div>
       </div>
 
       {showWordmark && (
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-sm tracking-wider uppercase text-white font-sans">
-              HVAC TWIN
+            <span className="font-bold text-sm tracking-tight text-slate-900 font-sans">
+              HVAC Twin
             </span>
-            <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 tracking-widest">
+            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
               PRO
             </span>
           </div>
-          <span className="text-[10px] text-slate-400 font-mono tracking-tight">
+          <span className="text-[11px] text-slate-500 font-medium">
             Supervisory Control Deck
           </span>
         </div>

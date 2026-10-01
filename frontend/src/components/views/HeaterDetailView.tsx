@@ -59,19 +59,19 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="surface-panel rounded-2xl p-6 border border-white/10 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
-            <Flame className="w-7 h-7 text-amber-400" />
+          <div className="w-13 h-13 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
+            <Flame className="w-6 h-6 text-amber-600" />
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-white tracking-tight font-sans">Electric Duct Reheat Bank</h1>
-              <span className="px-3 py-0.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight font-sans">Electric Duct Reheat Bank</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
                 {runningCount} / {units.length} Stages Energized
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-mono mt-1">
+            <p className="text-xs text-slate-500 font-sans mt-1">
               Silicon Controlled Rectifier (SCR) proportional duct reheat battery · Psychrometric humidity trim
             </p>
           </div>
@@ -80,13 +80,13 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAll('ON')}
-            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono transition-colors shadow-md active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs font-mono transition-all shadow-xs active:scale-95 cursor-pointer"
           >
             All Stages ON
           </button>
           <button
             onClick={() => handleAll('OFF')}
-            className="px-3.5 py-1.5 rounded-xl surface-well hover:bg-slate-800 text-slate-300 border border-white/10 font-bold text-xs font-mono transition-colors active:scale-95"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs font-mono transition-all active:scale-95 cursor-pointer"
           >
             All Stages OFF
           </button>
@@ -94,54 +94,54 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="surface-panel rounded-2xl p-5 border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono uppercase mb-2">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>Reheat Duty</span>
-            <Zap className="w-4 h-4 text-amber-400" />
+            <Zap className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-white tabular-nums">
-            {totalPower.toFixed(1)} <span className="text-xs text-slate-400 font-normal">kW</span>
+          <div className="text-2xl font-bold font-mono text-amber-600 tabular-nums">
+            {totalPower.toFixed(1)} <span className="text-xs text-slate-400 font-sans font-normal">kW</span>
           </div>
-          <div className="text-[11px] text-amber-400 font-mono mt-1 font-semibold">
+          <div className="text-[11px] text-amber-800 font-mono mt-1 font-semibold">
             {runningCount === 8 ? 'Full Capacity Trim' : 'Modulated Staging'}
           </div>
         </div>
 
-        <div className="surface-panel rounded-2xl p-5 border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono uppercase mb-2">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>Phase Current</span>
-            <Activity className="w-4 h-4 text-cyan-400" />
+            <Activity className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-cyan-400 tabular-nums">
-            {totalCurrent.toFixed(1)} <span className="text-xs text-slate-400 font-normal">A</span>
+          <div className="text-2xl font-bold font-mono text-blue-600 tabular-nums">
+            {totalCurrent.toFixed(1)} <span className="text-xs text-slate-400 font-sans font-normal">A</span>
           </div>
-          <div className="text-[11px] text-slate-400 font-mono mt-1">
+          <div className="text-[11px] text-slate-500 font-mono mt-1">
             415V 3-Phase Delta
           </div>
         </div>
 
-        <div className="surface-panel rounded-2xl p-5 border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono uppercase mb-2">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>Element Core Temp</span>
-            <Thermometer className="w-4 h-4 text-rose-400" />
+            <Thermometer className="w-4 h-4 text-rose-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-rose-400 tabular-nums">
-            {avgTemp} <span className="text-xs text-slate-400 font-normal">°C</span>
+          <div className="text-2xl font-bold font-mono text-rose-600 tabular-nums">
+            {avgTemp} <span className="text-xs text-slate-400 font-sans font-normal">°C</span>
           </div>
-          <div className="text-[11px] text-slate-400 font-mono mt-1">
-            Limit: <span className="text-slate-200 font-semibold">&lt; 85°C Safety Cutout</span>
+          <div className="text-[11px] text-slate-500 font-mono mt-1">
+            Limit: <span className="text-slate-800 font-semibold">&lt; 85°C Safety Cutout</span>
           </div>
         </div>
 
-        <div className="surface-panel rounded-2xl p-5 border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono uppercase mb-2">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono uppercase mb-2 font-semibold">
             <span>SCR Modulation</span>
-            <Cpu className="w-4 h-4 text-emerald-400" />
+            <Cpu className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 tabular-nums">
-            {runningCount > 0 ? '100%' : '0%'} <span className="text-xs text-slate-400 font-normal">Pulse</span>
+          <div className="text-2xl font-bold font-mono text-emerald-600 tabular-nums">
+            {runningCount > 0 ? '100%' : '0%'} <span className="text-xs text-slate-400 font-sans font-normal">Pulse</span>
           </div>
-          <div className="text-[11px] text-emerald-400 font-mono mt-1 font-semibold">
+          <div className="text-[11px] text-emerald-700 font-mono mt-1 font-semibold">
             Solid State Relay Synchronized
           </div>
         </div>
@@ -155,24 +155,24 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
           return (
             <div 
               key={unit.id}
-              className={`surface-panel rounded-2xl p-4 border transition-all duration-200 ${
+              className={`rounded-2xl p-4 border transition-all duration-200 ${
                 isRunning 
-                  ? 'border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.12)]' 
-                  : 'border-white/5 opacity-65'
+                  ? 'bg-white border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:border-amber-300' 
+                  : 'bg-slate-50/70 border-slate-200/60 opacity-80'
               }`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${isRunning ? 'bg-amber-400 animate-pulse' : 'bg-slate-600'}`} />
-                  <span className="text-xs font-bold text-white font-mono">{unit.name}</span>
+                  <span className={`w-2.5 h-2.5 rounded-full ${isRunning ? 'bg-amber-500 animate-pulse' : 'bg-slate-300'}`} />
+                  <span className="text-xs font-bold text-slate-900 font-mono">{unit.name}</span>
                 </div>
 
                 <button
                   onClick={() => handleToggle(unit.id, unit.state)}
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 active:scale-95 ${
                     isRunning 
-                      ? 'bg-amber-500 text-slate-950 shadow-md' 
-                      : 'surface-well text-slate-400 border border-white/10'
+                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs' 
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'
                   }`}
                 >
                   <Power className="w-2.5 h-2.5" />
@@ -180,24 +180,24 @@ export function HeaterDetailView({ systemState }: HeaterDetailViewProps) {
                 </button>
               </div>
 
-              <div className="space-y-2 py-3 border-b border-white/5 text-xs font-mono">
+              <div className="space-y-2 py-3 border-b border-slate-100 text-xs font-mono">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Duty Output:</span>
-                  <span className="text-white font-bold">{isRunning ? `${unit.power_kw.toFixed(1)} kW` : '0.0 kW'}</span>
+                  <span className="text-slate-500">Duty Output:</span>
+                  <span className="text-slate-900 font-bold">{isRunning ? `${unit.power_kw.toFixed(1)} kW` : '0.0 kW'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Current Draw:</span>
-                  <span className="text-cyan-400 font-bold">{isRunning ? `${unit.current_a ?? 13.0} A` : '0.0 A'}</span>
+                  <span className="text-slate-500">Current Draw:</span>
+                  <span className="text-blue-600 font-bold">{isRunning ? `${unit.current_a ?? 13.0} A` : '0.0 A'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Element Temp:</span>
-                  <span className="text-amber-400 font-bold">{isRunning ? `${unit.temp_c}°C` : '24.0°C'}</span>
+                  <span className="text-slate-500">Element Temp:</span>
+                  <span className="text-amber-600 font-bold">{isRunning ? `${unit.temp_c}°C` : '24.0°C'}</span>
                 </div>
               </div>
 
-              <div className="pt-2.5 flex items-center justify-between text-[10px] font-mono text-slate-500">
+              <div className="pt-2.5 flex items-center justify-between text-[10px] font-mono text-slate-400">
                 <span>Stage {unit.stage || 1}</span>
-                <span className={isRunning ? 'text-amber-400 font-semibold' : 'text-slate-500'}>
+                <span className={isRunning ? 'text-amber-700 font-semibold' : 'text-slate-400'}>
                   {isRunning ? 'ENERGIZED' : 'STANDBY'}
                 </span>
               </div>
