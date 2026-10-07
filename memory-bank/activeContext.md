@@ -22,10 +22,18 @@
   - Metric Cards: Replaced vertical stack with a balanced 2x2 bento grid (`grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4`) with compact padding (`p-3 sm:p-5`) and non-truncated titles.
   - MotionTabs: Eliminated `scrollIntoView()` ancestor bubble that caused page jumping to the top on mobile telemetry updates. Replaced with container-scoped horizontal `wrapper.scrollTo({ left, behavior: 'smooth' })` triggered strictly on tab id changes. Memoized `hvacMotionTabs` in `page.tsx`.
   - Mobile Drawer Smooth Hardware Transitions: Replaced abrupt `{isOpen && ...}` conditional unmount with continuously mounted Tailwind v4 hardware-accelerated drawer (`translate-x-0` vs `-translate-x-full`, `duration-300`, `ease-[cubic-bezier(0.16,1,0.3,1)]`) and smooth fading backdrop (`opacity-100` vs `opacity-0 pointer-events-none`) with body scroll lock.
+- **Whole-Home IoT Digital Twin Platform (`home_iot`):**
+  - **3-System Unified Architecture:** Integrated `HOME` alongside `HVAC` and `GRID` in `Sidebar.tsx` and `TopHeader.tsx`.
+  - **Real-Time Interactive SVG Floorplan Digital Twin:** Interactive architectural schematic spanning 6 zones (Rooftop Solar & LFP Storage, Living Room & Media Lounge, Master Suite, Smart Kitchen, Home Office, EV Garage & Workshop) with animated energy currents, chandelier glow filters, AC cool ripples, and click-to-inspect room selection.
+  - **Direct Zone Control Matrix:** Instant optimistic toggles for lighting circuits, smart appliances, climate units, EV wallbox (32A), and interactive thermostat steppers.
+  - **Quick Smart Scenes & Security Modes:** Fast 1-touch scene presets (`Home`, `Away`, `Night`, `Eco`, `Entertain`) and security guard states (`ARMED_HOME`, `ARMED_AWAY`, `DISARMED`).
+  - **Streaming Live Activity Feed:** Real-time event timeline logging automated actions, comfort adjustments, solar surplus peaks, and security events.
+  - **Backend IoT Simulator Core:** Integrated into FastAPI `ThermodynamicSimulator` with live WebSocket broadcasting (`/ws/telemetry`) and 5 REST endpoints in `/api/v1/control/home-iot/`.
 - **Dedicated Hardware Icons (Zero Emojis):** Replaced unicode arrow glyphs with Lucide `ArrowRight` icon and hardware status badges.
 - **Strict No-Comments Invariant:** Authored code contains zero boilerplate, narrative, or explanatory comments.
 
 ## Validation Status
 - Next.js 16.3.6 Turbopack production build: Passed with 0 errors.
+- FastAPI backend Python syntax: Passed with 0 errors.
 - Visual inspection via browser subagent: Verified clean 390px mobile viewport and 1440px desktop viewport screenshots.
-- Git Repository Sync: Changes pushed to `origin main` on GitHub (commit `bc0654a`).
+- Git Repository Sync: Changes pushed to `origin main` on GitHub (commit `478557c`).

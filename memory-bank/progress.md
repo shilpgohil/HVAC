@@ -72,3 +72,12 @@
   - **Fluid Mobile Hamburger Drawer Transition**: Replaced abrupt conditional unmounting `{isOpen && ...}` with continuously mounted Tailwind CSS v4 hardware-accelerated drawer (`translate-x-0` vs `-translate-x-full`, `duration-300`, `ease-[cubic-bezier(0.16,1,0.3,1)]`) and smooth fading backdrop (`opacity-100` vs `opacity-0 pointer-events-none`) with body scroll locking.
   - **Interactive Hamburger State**: Connected `isMobileSidebarOpen` state to `TopHeader.tsx` hamburger button with 90° rotation and active blue accent styling.
   - **Production Verification**: Built with Turbopack (exit code 0), committed, and pushed to `origin main` on GitHub (commit `bc0654a`).
+
+- [x] **Phase 12: Whole-Home IoT Digital Twin Platform (`home_iot`)**
+  - **3-System Unified Architecture**: Seamless switching between `HVAC`, `GRID`, and `HOME` in `Sidebar.tsx` and `TopHeader.tsx`.
+  - **Interactive Smart Home Real-Time Vector Twin**: Built SVG digital twin covering 6 zones (Rooftop Solar & LFP Storage, Living Room Lounge, Master Suite, Smart Kitchen, Home Office, EV Garage) with animated electricity currents, chandelier glow filters, and AC cool airflow ripples.
+  - **Direct Zone Control Matrix**: Interactive toggles for lighting circuits, mini-split AC units, smart plugs, motorized blinds, EV Wallbox (7.2 kW), and thermostat setpoint steppers.
+  - **Smart Scenes & Perimeter Security**: Quick 1-touch presets (`Home`, `Away`, `Night`, `Eco`, `Entertain`) and security modes (`ARMED_HOME`, `ARMED_AWAY`, `DISARMED`).
+  - **Live Real-Time Activity Feed**: Timestamped streaming event log with severity indicators and room tags.
+  - **FastAPI Backend Simulation & REST Endpoints**: Simulated home physics with WebSocket telemetry broadcasting (`/ws/telemetry`) and 5 dedicated control endpoints in `backend/app/api/v1/controls.py`.
+  - **Production Verification**: Built with Turbopack (exit code 0), Python syntax verified, committed, and pushed to `origin main` on GitHub (commit `478557c`).
