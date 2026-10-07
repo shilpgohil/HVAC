@@ -23,17 +23,36 @@
   - MotionTabs: Eliminated `scrollIntoView()` ancestor bubble that caused page jumping to the top on mobile telemetry updates. Replaced with container-scoped horizontal `wrapper.scrollTo({ left, behavior: 'smooth' })` triggered strictly on tab id changes. Memoized `hvacMotionTabs` in `page.tsx`.
   - Mobile Drawer Smooth Hardware Transitions: Replaced abrupt `{isOpen && ...}` conditional unmount with continuously mounted Tailwind v4 hardware-accelerated drawer (`translate-x-0` vs `-translate-x-full`, `duration-300`, `ease-[cubic-bezier(0.16,1,0.3,1)]`) and smooth fading backdrop (`opacity-100` vs `opacity-0 pointer-events-none`) with body scroll lock.
 - **Whole-Home IoT Digital Twin Platform (`home_iot`):**
-  - **3-System Unified Architecture:** Integrated `HOME` alongside `HVAC` and `GRID` in `Sidebar.tsx` and `TopHeader.tsx`.
-  - **Real-Time Interactive SVG Floorplan Digital Twin:** Interactive architectural schematic spanning 6 zones (Rooftop Solar & LFP Storage, Living Room & Media Lounge, Master Suite, Smart Kitchen, Home Office, EV Garage & Workshop) with animated energy currents, chandelier glow filters, AC cool ripples, and click-to-inspect room selection.
-  - **Direct Zone Control Matrix:** Instant optimistic toggles for lighting circuits, smart appliances, climate units, EV wallbox (32A), and interactive thermostat steppers.
-  - **Quick Smart Scenes & Security Modes:** Fast 1-touch scene presets (`Home`, `Away`, `Night`, `Eco`, `Entertain`) and security guard states (`ARMED_HOME`, `ARMED_AWAY`, `DISARMED`).
-  - **Streaming Live Activity Feed:** Real-time event timeline logging automated actions, comfort adjustments, solar surplus peaks, and security events.
-  - **Backend IoT Simulator Core:** Integrated into FastAPI `ThermodynamicSimulator` with live WebSocket broadcasting (`/ws/telemetry`) and 5 REST endpoints in `/api/v1/control/home-iot/`.
-- **Dedicated Hardware Icons (Zero Emojis):** Replaced unicode arrow glyphs with Lucide `ArrowRight` icon and hardware status badges.
+  - **3-System Unified Architecture:** Integrated `HOME` alongside `HVAC` and `GRID` in `Sidebar.tsx` and `TopHeader.tsx`. Dynamic status metrics in `TopHeader.tsx` adapt per system mode.
+  - **High-End Architectural CAD Blueprint & Intelligent Flow Twin:**
+    * Precision structural double walls, architectural interior partitions, and door swing arcs.
+    * Solar PV Microgrid array with 24x 420W bifacial N-type monocrystalline cells, silver busbars, animated solar glare shimmer, 10kW hybrid inverter, 15kWh LFP Powerwall battery bank, and bi-directional utility grid interface.
+    * Living Room & Media Lounge (42 m²): Sectional sofa silhouette, 75" 4K OLED TV with animated Ambilight power glow, central chandelier with radial light cone filter, inverter AC split with spinning turbine and cool airflow ripples, and PIR occupancy radar beacon.
+    * Master Bedroom Suite (28 m²): King architectural bed with nightstands, dual articulated bedside reading lamps casting warm light cones, whisper-quiet AC unit with spinning blades, and motorized window shades with mechanical slat louvers.
+    * Smart Chef Kitchen (24 m²): Quartz counter island, dual induction cooktop with glowing spiral heating coils (orange heat glow), smart French-door inverter refrigerator (130W readout), centrifugal ventilation hood with spinning impeller, and water leak safe detector.
+    * Home Office & Studio (18 m²): Dual ultra-wide 4K workstations, architect task light with dimmer (520 Lux), and HEPA air purifier with circular particle vortex.
+    * EV Garage & High-Voltage Bay (35 m²): Model 3 Long Range vehicle silhouette connected to Level 2 32A Wallbox charger with animated high-speed electrical conduit flow and kinetic spark beam.
+    * Intelligent Multi-Bus Flow Overlays: Selectable conduit filters (`All Conduits`, `Microgrid Bus`, `HVAC Airflow`) with animated flow lines indicating solar PV power generation, EV charging rate, and ducted airflow.
+  - **Precision Smooth Sliders & Actuators:**
+    * Custom hardware-styled range sliders (`.smooth-slider`) with glowing circular thumbs, track fill transitions, and live numeric percentage readouts for lighting dimmers and motorized window blinds.
+    * Interactive thermostat steppers with `.btn-press` spring feedback and real-time setpoint updates.
+  - **8 Deep Autonomous Automation Scenarios:**
+    * Solar Surplus & EV Fast Charge (8.8 kW rooftop PV channeled to EV Wallbox and LFP battery).
+    * Peak Tariff Shaving (Zero Grid import, battery discharging 3.8 kW).
+    * Luxury Ambiance & Cinema (Chandelier 100%, cove lights 90%, 4K media active, mini-split at 21.5°C).
+    * Silent Sleep & Perimeter Guard (Bedrooms dimmed, silent AC, perimeter armed).
+    * Eco Saver & Smart Net-Zero (24.5°C setpoints, shades down 75%).
+    * Grid Blackout Microgrid Island (Grid offline, solar & battery powering critical circuits).
+    * Vacation Away & Flood Watch (Non-essentials off, security armed away, leak watch).
+    * Heatwave Emergency Pre-Cool (Max cooling capacity, 20.5°C setpoints).
+  - **Dedicated Vector Equipment & Animated Micro-Icons (Zero Emojis):**
+    * Spinning fan blades (`spin-fast`, `spin-slow`), solar shimmers (`shimmer-solar`), and pulsating status rings.
+  - **Backend IoT Simulator & REST API:**
+    * Full scenario switching and device dimming endpoints: `POST /control/home-iot/scenario`, `POST /control/home-iot/dimmer`.
+    * Native FastAPI WebSocket broadcasting live state ticks.
 - **Strict No-Comments Invariant:** Authored code contains zero boilerplate, narrative, or explanatory comments.
 
 ## Validation Status
 - Next.js 16.3.6 Turbopack production build: Passed with 0 errors.
 - FastAPI backend Python syntax: Passed with 0 errors.
-- Visual inspection via browser subagent: Verified clean 390px mobile viewport and 1440px desktop viewport screenshots.
-- Git Repository Sync: Changes pushed to `origin main` on GitHub (commit `478557c`).
+- Git Repository Sync: Changes pushed to `origin main` on GitHub (commit `c929edc`).

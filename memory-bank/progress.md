@@ -81,3 +81,13 @@
   - **Live Real-Time Activity Feed**: Timestamped streaming event log with severity indicators and room tags.
   - **FastAPI Backend Simulation & REST Endpoints**: Simulated home physics with WebSocket telemetry broadcasting (`/ws/telemetry`) and 5 dedicated control endpoints in `backend/app/api/v1/controls.py`.
   - **Production Verification**: Built with Turbopack (exit code 0), Python syntax verified, committed, and pushed to `origin main` on GitHub (commit `478557c`).
+
+- [x] **Phase 13: Architectural CAD Blueprint Digital Twin, Intelligent Multi-Bus Flows & Smooth Sliders**
+  - **CAD-Grade Vector Floorplan Layout**: Replaced block boxes with precision architectural double walls, interior partitions, door swing arcs, and room geometries across all 6 residential zones.
+  - **Intelligent Flow Overlay with Filtering**: Animated multi-bus electrical power paths (Solar PV -> Inverter -> Battery/EV/Loads/Grid) and HVAC ducted airflow waves with selective filtering (`All Conduits`, `Microgrid Bus`, `HVAC Airflow`).
+  - **Responsive & Animated Hardware Equipment (Zero Emojis)**: High-detail 24x 420W bifacial N-type monocrystalline solar array with animated shimmer, 10kW hybrid inverter, 15kWh LFP battery gauge, 75" OLED with Ambilight, spinning fan turbines in AC and range hoods, induction cooktop heating spirals, and EV charging sparks.
+  - **Precision Smooth Sliders**: Added `.smooth-slider` with custom styled thumbs and tracks for dimming lighting levels and setting motorized blind positions (0% to 100%) with live numeric feedback.
+  - **8 Deep Autonomous Automation Scenarios**: Dedicated cards for Solar Surplus, Peak Tariff Shaving, Luxury Ambiance, Silent Sleep, Eco Net-Zero, Grid Blackout Islanding, Vacation Flood Watch, and Heatwave Pre-Cooling with backend synchronization (`POST /control/home-iot/scenario`).
+  - **Dynamic System Header Telemetry**: Dynamic metrics in `TopHeader.tsx` adapting for Home IoT, Electrical Substation, and HVAC Cleanroom modes.
+  - **Production Verification**: Next.js 16.3.6 Turbopack build passed (exit code 0), Python syntax verified, committed, and pushed to `origin main` on GitHub (commit `c929edc`).
+
