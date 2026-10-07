@@ -1,4 +1,4 @@
-import { SystemState, ElectricalState } from '@/types/hvac';
+import { SystemState, ElectricalState, HomeIotState } from '@/types/hvac';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -129,6 +129,52 @@ export async function switchScenario(scenarioId: number): Promise<any> {
     method: 'POST'
   });
   if (!res.ok) throw new Error('Failed to activate scenario');
+  return res.json();
+}
+
+export async function fetchHomeIotState(): Promise<HomeIotState> {
+  const res = await fetch(`${API_BASE}/control/home-iot/state`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch home iot state');
+  return res.json();
+}
+
+export async function toggleHomeIotDevice(roomId: string, deviceId: string, state?: boolean): Promise<any> {
+  const res = await fetch(`${API_BASE}/control/home-iot/toggle`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_id: roomId, device_id: deviceId, state })
+  });
+  if (!res.ok) throw new Error('Failed to toggle home device');
+  return res.json();
+}
+
+export async function updateHomeIotRoomTemp(roomId: string, targetC: number): Promise<any> {
+  const res = await fetch(`${API_BASE}/control/home-iot/setpoint`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_id: roomId, target_c: targetC })
+  });
+  if (!res.ok) throw new Error('Failed to update room temperature');
+  return res.json();
+}
+
+export async function activateHomeIotScene(sceneName: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/control/home-iot/scene`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scene: sceneName })
+  });
+  if (!res.ok) throw new Error('Failed to activate scene');
+  return res.json();
+}
+
+export async function updateHomeIotSecurityMode(mode: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/control/home-iot/security`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode })
+  });
+  if (!res.ok) throw new Error('Failed to update security mode');
   return res.json();
 }
 

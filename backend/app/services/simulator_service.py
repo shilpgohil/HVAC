@@ -80,6 +80,7 @@ class ThermodynamicSimulator:
         
         self.live_history: List[Dict[str, Any]] = []
         self._init_history()
+        self._init_home_iot()
 
     def _init_history(self):
         now = datetime.now()
@@ -535,6 +536,269 @@ class ThermodynamicSimulator:
             },
             "alarms": self.alarms
         }
+
+    def _init_home_iot(self):
+        self.home_iot_security_mode: str = "ARMED_HOME"
+        self.home_iot_active_scene: str = "Home"
+        self.home_iot_rooms: List[Dict[str, Any]] = [
+            {
+                "id": "living_room",
+                "name": "Living Room",
+                "area_sqm": 42.0,
+                "temp_c": 23.4,
+                "target_temp_c": 22.5,
+                "humidity_rh": 48.0,
+                "ambient_lux": 320,
+                "motion": True,
+                "ac_mode": "COOL",
+                "ac_fan_speed": "AUTO",
+                "devices": [
+                    {"id": "lr_chandelier", "name": "Main Chandelier", "type": "light", "state": True, "level": 80, "power_w": 65},
+                    {"id": "lr_led_cove", "name": "Ambient Cove Lights", "type": "light", "state": True, "level": 60, "power_w": 28},
+                    {"id": "lr_media_center", "name": "4K Cinema & Audio", "type": "appliance", "state": True, "level": 100, "power_w": 240},
+                    {"id": "lr_ac_split", "name": "Inverter Mini-Split", "type": "climate", "state": True, "level": 75, "power_w": 850},
+                ]
+            },
+            {
+                "id": "master_bedroom",
+                "name": "Master Suite",
+                "area_sqm": 28.0,
+                "temp_c": 22.8,
+                "target_temp_c": 22.0,
+                "humidity_rh": 50.0,
+                "ambient_lux": 110,
+                "motion": False,
+                "ac_mode": "COOL",
+                "ac_fan_speed": "LOW",
+                "devices": [
+                    {"id": "mbr_ceiling_light", "name": "Ceiling Pendant", "type": "light", "state": False, "level": 0, "power_w": 0},
+                    {"id": "mbr_bedside_lamps", "name": "Bedside Lamps", "type": "light", "state": True, "level": 40, "power_w": 18},
+                    {"id": "mbr_smart_blinds", "name": "Motorized Blinds", "type": "cover", "state": True, "level": 65, "power_w": 0},
+                    {"id": "mbr_ac_split", "name": "Silent Inverter AC", "type": "climate", "state": True, "level": 60, "power_w": 620},
+                ]
+            },
+            {
+                "id": "kitchen",
+                "name": "Smart Kitchen",
+                "area_sqm": 24.0,
+                "temp_c": 24.1,
+                "target_temp_c": 23.0,
+                "humidity_rh": 52.0,
+                "ambient_lux": 450,
+                "motion": True,
+                "water_leak_detected": False,
+                "devices": [
+                    {"id": "kt_island_spots", "name": "Island Downlights", "type": "light", "state": True, "level": 100, "power_w": 45},
+                    {"id": "kt_refrigerator", "name": "Smart Inverter Fridge", "type": "appliance", "state": True, "level": 100, "power_w": 130},
+                    {"id": "kt_induction_cooktop", "name": "Induction Cooktop", "type": "appliance", "state": False, "level": 0, "power_w": 0},
+                    {"id": "kt_exhaust_hood", "name": "Ventilation Hood", "type": "fan", "state": True, "level": 50, "power_w": 75},
+                ]
+            },
+            {
+                "id": "home_office",
+                "name": "Home Office",
+                "area_sqm": 18.0,
+                "temp_c": 23.0,
+                "target_temp_c": 22.5,
+                "humidity_rh": 47.0,
+                "ambient_lux": 520,
+                "motion": True,
+                "devices": [
+                    {"id": "ho_task_light", "name": "Architect Desk Light", "type": "light", "state": True, "level": 85, "power_w": 22},
+                    {"id": "ho_workstation", "name": "Workstation Rig & Displays", "type": "plug", "state": True, "level": 100, "power_w": 380},
+                    {"id": "ho_purifier", "name": "HEPA Air Purifier", "type": "fan", "state": True, "level": 70, "power_w": 35},
+                ]
+            },
+            {
+                "id": "ev_garage",
+                "name": "EV Garage & Workshop",
+                "area_sqm": 35.0,
+                "temp_c": 26.2,
+                "target_temp_c": 25.0,
+                "humidity_rh": 55.0,
+                "ambient_lux": 80,
+                "garage_door_closed": True,
+                "ev_connected": True,
+                "ev_charging": True,
+                "ev_battery_soc": 78,
+                "devices": [
+                    {"id": "gr_overhead_tubes", "name": "Overhead LED Batten", "type": "light", "state": True, "level": 100, "power_w": 50},
+                    {"id": "gr_ev_wallbox", "name": "Level 2 EV Wallbox (32A)", "type": "charger", "state": True, "level": 100, "power_w": 7200},
+                    {"id": "gr_door_motor", "name": "Smart Garage Opener", "type": "cover", "state": False, "level": 0, "power_w": 0},
+                ]
+            },
+            {
+                "id": "outdoor_solar",
+                "name": "Rooftop Solar & Garden",
+                "area_sqm": 60.0,
+                "temp_c": 31.5,
+                "solar_radiation_w_m2": 780,
+                "solar_pv_kw": 8.4,
+                "battery_flow_kw": 2.1,
+                "battery_soc_pct": 91,
+                "devices": [
+                    {"id": "od_garden_bollards", "name": "Landscape Bollards", "type": "light", "state": False, "level": 0, "power_w": 0},
+                    {"id": "od_smart_irrigation", "name": "Drip Irrigation Valve", "type": "valve", "state": False, "level": 0, "power_w": 0},
+                    {"id": "od_solar_inverter", "name": "10kW Hybrid Inverter", "type": "inverter", "state": True, "level": 100, "power_w": 0},
+                    {"id": "od_battery_pack", "name": "15kWh LFP Storage Bank", "type": "battery", "state": True, "level": 91, "power_w": 0},
+                ]
+            }
+        ]
+        self.home_iot_activities: List[Dict[str, Any]] = [
+            {"id": "act-1", "time": "12:20:04", "category": "climate", "room": "Living Room", "message": "Inverter Mini-Split trimmed to 22.5°C (Eco Comfort)", "severity": "info"},
+            {"id": "act-2", "time": "12:18:31", "category": "energy", "room": "EV Garage", "message": "EV Wallbox charging at 7.2 kW (PV Surplus Priority)", "severity": "success"},
+            {"id": "act-3", "time": "12:14:10", "category": "solar", "room": "Rooftop Solar", "message": "Solar PV generation peaked at 8.4 kW (Exporting 2.8 kW)", "severity": "info"},
+            {"id": "act-4", "time": "12:05:45", "category": "security", "room": "Whole Home", "message": "Perimeter security armed in Home Guard mode", "severity": "success"}
+        ]
+
+    def get_home_iot_state(self) -> Dict[str, Any]:
+        t = self.tick_count
+        noise = 0.04 * math.sin(t * 0.2)
+        
+        total_w = sum(dev["power_w"] for r in self.home_iot_rooms for dev in r["devices"] if dev.get("state"))
+        total_power_kw = round(total_w / 1000.0, 2)
+        solar_kw = round(max(0.0, 8.4 + 0.3 * math.sin(t * 0.08)), 2)
+        grid_net_kw = round(total_power_kw - solar_kw, 2)
+        
+        active_devices = sum(1 for r in self.home_iot_rooms for dev in r["devices"] if dev.get("state"))
+        total_devices = sum(len(r["devices"]) for r in self.home_iot_rooms)
+        
+        indoor_rooms = [r for r in self.home_iot_rooms if r["id"] != "outdoor_solar"]
+        avg_temp = round(sum(r["temp_c"] for r in indoor_rooms) / len(indoor_rooms), 1)
+        avg_humidity = round(sum(r["humidity_rh"] for r in indoor_rooms) / len(indoor_rooms), 1)
+        
+        scenes = [
+            {"id": "Home", "name": "Normal Home", "active": self.home_iot_active_scene == "Home"},
+            {"id": "Away", "name": "Away Guard", "active": self.home_iot_active_scene == "Away"},
+            {"id": "Night", "name": "Good Night", "active": self.home_iot_active_scene == "Night"},
+            {"id": "Eco", "name": "Eco Saver", "active": self.home_iot_active_scene == "Eco"},
+            {"id": "Entertain", "name": "Entertainment", "active": self.home_iot_active_scene == "Entertain"}
+        ]
+        
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "online": True,
+            "security_mode": self.home_iot_security_mode,
+            "active_scene": self.home_iot_active_scene,
+            "kpis": {
+                "total_power_kw": total_power_kw,
+                "solar_generation_kw": solar_kw,
+                "grid_net_kw": grid_net_kw,
+                "battery_soc_pct": 91,
+                "avg_indoor_temp_c": avg_temp,
+                "avg_indoor_humidity_rh": avg_humidity,
+                "active_devices_count": active_devices,
+                "total_devices_count": total_devices,
+                "air_quality_iaq": "EXCELLENT",
+                "water_leak_status": "NORMAL"
+            },
+            "rooms": self.home_iot_rooms,
+            "scenes": scenes,
+            "activities": self.home_iot_activities[:10]
+        }
+
+    def toggle_home_iot_device(self, room_id: str, device_id: str, target_state: Optional[bool] = None) -> Dict[str, Any]:
+        for room in self.home_iot_rooms:
+            if room["id"] == room_id:
+                for dev in room["devices"]:
+                    if dev["id"] == device_id:
+                        new_state = (not dev["state"]) if target_state is None else target_state
+                        dev["state"] = new_state
+                        if dev["type"] == "light":
+                            dev["level"] = 80 if new_state else 0
+                            dev["power_w"] = 45 if new_state else 0
+                        elif dev["type"] == "climate":
+                            dev["power_w"] = 750 if new_state else 0
+                        elif dev["type"] == "charger":
+                            dev["power_w"] = 7200 if new_state else 0
+                        elif dev["type"] == "appliance":
+                            dev["power_w"] = 150 if new_state else 0
+                        
+                        now_str = datetime.now().strftime("%H:%M:%S")
+                        act_msg = f"{dev['name']} turned {'ON' if new_state else 'OFF'}"
+                        self.home_iot_activities.insert(0, {
+                            "id": f"act-{len(self.home_iot_activities) + 1}",
+                            "time": now_str,
+                            "category": dev["type"],
+                            "room": room["name"],
+                            "message": act_msg,
+                            "severity": "info" if new_state else "warning"
+                        })
+                        return {"success": True, "device": dev, "room_id": room_id}
+        return {"success": False, "error": "Device not found"}
+
+    def set_home_iot_room_temp(self, room_id: str, target_temp_c: float) -> Dict[str, Any]:
+        for room in self.home_iot_rooms:
+            if room["id"] == room_id:
+                room["target_temp_c"] = round(target_temp_c, 1)
+                now_str = datetime.now().strftime("%H:%M:%S")
+                self.home_iot_activities.insert(0, {
+                    "id": f"act-{len(self.home_iot_activities) + 1}",
+                    "time": now_str,
+                    "category": "climate",
+                    "room": room["name"],
+                    "message": f"Setpoint adjusted to {target_temp_c:.1f}°C",
+                    "severity": "info"
+                })
+                return {"success": True, "room_id": room_id, "target_temp_c": target_temp_c}
+        return {"success": False, "error": "Room not found"}
+
+    def set_home_iot_scene(self, scene_name: str) -> Dict[str, Any]:
+        self.home_iot_active_scene = scene_name
+        now_str = datetime.now().strftime("%H:%M:%S")
+        
+        if scene_name == "Away":
+            self.home_iot_security_mode = "ARMED_AWAY"
+            for r in self.home_iot_rooms:
+                for d in r["devices"]:
+                    if d["type"] == "light":
+                        d["state"] = False
+                        d["power_w"] = 0
+                    elif d["type"] == "climate":
+                        d["power_w"] = 200
+        elif scene_name == "Night":
+            self.home_iot_security_mode = "ARMED_HOME"
+            for r in self.home_iot_rooms:
+                for d in r["devices"]:
+                    if d["id"] != "mbr_bedside_lamps":
+                        if d["type"] == "light":
+                            d["state"] = False
+                            d["power_w"] = 0
+        elif scene_name == "Eco":
+            for r in self.home_iot_rooms:
+                if "target_temp_c" in r:
+                    r["target_temp_c"] = 24.5
+        elif scene_name == "Home" or scene_name == "Entertain":
+            self.home_iot_security_mode = "DISARMED"
+            for r in self.home_iot_rooms:
+                for d in r["devices"]:
+                    if d["type"] == "light":
+                        d["state"] = True
+                        d["level"] = 80
+                        d["power_w"] = 40
+        
+        self.home_iot_activities.insert(0, {
+            "id": f"act-{len(self.home_iot_activities) + 1}",
+            "time": now_str,
+            "category": "scene",
+            "room": "Whole Home",
+            "message": f"Smart Scene activated: {scene_name}",
+            "severity": "success"
+        })
+        return {"success": True, "scene": scene_name}
+
+    def set_home_iot_security_mode(self, mode: str) -> Dict[str, Any]:
+        self.home_iot_security_mode = mode
+        now_str = datetime.now().strftime("%H:%M:%S")
+        self.home_iot_activities.insert(0, {
+            "id": f"act-{len(self.home_iot_activities) + 1}",
+            "time": now_str,
+            "category": "security",
+            "room": "Security Guard",
+            "message": f"Perimeter security set to {mode}",
+            "severity": "warning" if "ARMED" in mode else "info"
+        })
+        return {"success": True, "security_mode": mode}
 
 
 simulator = ThermodynamicSimulator()

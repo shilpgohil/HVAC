@@ -11,12 +11,13 @@ import {
   Settings, 
   Zap, 
   X,
-  Radio
+  Radio,
+  Home
 } from 'lucide-react';
 import { LivingBrandLogo } from '@/components/common/LivingBrandLogo';
 
 export type NavTab = 'dashboard' | 'ahu' | 'odu' | 'heater' | 'graph' | 'alarms' | 'settings';
-export type SystemMode = 'hvac' | 'electrical';
+export type SystemMode = 'hvac' | 'electrical' | 'home_iot';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -88,28 +89,39 @@ export function Sidebar({
         </div>
 
         <div className="px-3">
-          <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/60 grid grid-cols-2 gap-1 text-[11px] font-mono">
+          <div className="p-1 rounded-xl bg-slate-100 border border-slate-200/60 grid grid-cols-3 gap-1 text-[11px] font-mono">
             <button
               onClick={() => handleSystemChange('hvac')}
-              className={`py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-1.5 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                 activeSystem === 'hvac'
                   ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Snowflake className="w-3.5 h-3.5 text-blue-600" />
+              <Snowflake className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>HVAC</span>
             </button>
             <button
               onClick={() => handleSystemChange('electrical')}
-              className={`py-1.5 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-1.5 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
                 activeSystem === 'electrical'
-                  ? 'bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80'
+                  ? 'bg-white text-amber-700 font-bold shadow-xs border border-slate-200/80'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Zap className="w-3.5 h-3.5 text-amber-600" />
+              <Zap className="w-3.5 h-3.5 text-amber-600 shrink-0" />
               <span>GRID</span>
+            </button>
+            <button
+              onClick={() => handleSystemChange('home_iot')}
+              className={`py-1.5 px-1.5 rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                activeSystem === 'home_iot'
+                  ? 'bg-white text-emerald-700 font-bold shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>HOME</span>
             </button>
           </div>
         </div>

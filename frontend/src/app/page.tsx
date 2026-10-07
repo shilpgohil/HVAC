@@ -25,6 +25,7 @@ import { TemperatureGraphView } from '@/components/views/TemperatureGraphView';
 import { AlarmsDetailView } from '@/components/views/AlarmsDetailView';
 import { SettingsDetailView } from '@/components/views/SettingsDetailView';
 import { ElectricalMonitoringView } from '@/components/electrical/ElectricalMonitoringView';
+import { HomeIotMonitoringView } from '@/components/home_iot/HomeIotMonitoringView';
 import { SystemState } from '@/types/hvac';
 import { fetchSystemState } from '@/lib/api';
 import { useHvacWebSocket } from '@/hooks/useHvacWebSocket';
@@ -173,6 +174,8 @@ export default function DashboardPage() {
               </p>
               <ElectricalMonitoringView />
             </div>
+          ) : activeSystem === 'home_iot' ? (
+            <HomeIotMonitoringView />
           ) : (
             <>
               <MotionTabs

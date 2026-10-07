@@ -77,6 +77,25 @@ async def update_mode(payload: ModeRequest) -> Dict[str, Any]:
     return {"system_mode": mode}
 
 
+class HomeDeviceToggleRequest(BaseModel):
+    room_id: str
+    device_id: str
+    state: Optional[bool] = None
+
+
+class HomeRoomTempRequest(BaseModel):
+    room_id: str
+    target_c: float
+
+
+class HomeSceneRequest(BaseModel):
+    scene: str
+
+
+class HomeSecurityRequest(BaseModel):
+    mode: str
+
+
 @router.post("/alarm/ack")
 async def ack_alarm(payload: AlarmAckRequest) -> Dict[str, Any]:
     success = simulator.acknowledge_alarm(payload.alarm_id, payload.user or "admin")
@@ -97,6 +116,31 @@ async def get_temperature_history(range: str = Query("12H", description="1H, 6H,
 @router.get("/electrical/state")
 async def get_electrical_state() -> Dict[str, Any]:
     return simulator.get_electrical_state()
+
+
+@router.get("/home-iot/state")
+async def get_home_iot_state() -> Dict[str, Any]:
+    return simulator.get_home_iot_state()
+
+
+@router.post("/home-iot/toggle")
+async def toggle_home_device(payload: HomeDeviceToggleRequest) -> Dict[str, Any]:
+    return simulator.toggle_home_iot_device(payload.room_id, payload.device_id, payload.state)
+
+
+@router.post("/home-iot/setpoint")
+async def update_home_room_temp(payload: HomeRoomTempRequest) -> Dict[str, Any]:
+    return simulator.set_home_iot_room_temp(payload.room_id, payload.target_c)
+
+
+@router.post("/home-iot/scene")
+async def activate_home_scene(payload: HomeSceneRequest) -> Dict[str, Any]:
+    return simulator.set_home_iot_scene(payload.scene)
+
+
+@router.post("/home-iot/security")
+async def update_home_security(payload: HomeSecurityRequest) -> Dict[str, Any]:
+    return simulator.set_home_iot_security_mode(payload.mode)
 
 
 @router.get("/state")

@@ -18,7 +18,7 @@ import { LivingBrandLogo } from '@/components/common/LivingBrandLogo';
 import { SystemState } from '@/types/hvac';
 import { fetchScenarios, switchScenario, ScenarioItem } from '@/lib/api';
 
-export type SystemMode = 'hvac' | 'electrical';
+export type SystemMode = 'hvac' | 'electrical' | 'home_iot';
 
 interface TopHeaderProps {
   activeSystem: SystemMode;
@@ -127,10 +127,18 @@ export function TopHeader({
         </div>
 
         <div className="hidden md:flex items-center gap-2 text-xs font-medium text-slate-500">
-          <span className="text-slate-900 font-bold text-sm tracking-tight">HVAC Command</span>
+          <span className="text-slate-900 font-bold text-sm tracking-tight">
+            {activeSystem === 'hvac' ? 'HVAC Command' : activeSystem === 'electrical' ? 'Grid Substation' : 'Home Automation'}
+          </span>
           <span className="text-slate-300">/</span>
-          <span className="text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
-            {activeSystem === 'hvac' ? 'Cleanroom Twin' : 'Electrical SLD'}
+          <span className={`font-semibold px-2 py-0.5 rounded-md border text-[11px] font-mono ${
+            activeSystem === 'hvac'
+              ? 'text-blue-700 bg-blue-50 border-blue-200'
+              : activeSystem === 'electrical'
+              ? 'text-amber-700 bg-amber-50 border-amber-200'
+              : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+          }`}>
+            {activeSystem === 'hvac' ? 'Cleanroom Twin' : activeSystem === 'electrical' ? 'Electrical SLD' : 'Smart Home Twin'}
           </span>
         </div>
 

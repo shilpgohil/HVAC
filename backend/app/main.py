@@ -20,9 +20,11 @@ async def simulation_loop():
     while True:
         try:
             tick_data = simulator.tick()
+            home_iot_data = simulator.get_home_iot_state()
             await ws_manager.broadcast_json({
                 "type": "SIMULATION_TICK",
-                "payload": tick_data
+                "payload": tick_data,
+                "home_iot": home_iot_data
             })
             await asyncio.sleep(1.0 / settings.SIMULATOR_TICK_RATE_HZ)
         except asyncio.CancelledError:
