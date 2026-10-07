@@ -66,3 +66,9 @@
   - Verified compilation with Next.js 16 Turbopack production build (0 errors).
   - Verified layout across 390px mobile and 1440px desktop viewports via browser screenshots.
   - Pushed all updates to remote GitHub repository `origin main`.
+
+- [x] **Phase 11: Mobile Auto-Scroll Resolution & Smooth Kinetic Drawer Transition**
+  - **Eliminated Mobile Auto-Scroll to Top**: Diagnosed root cause in `MotionTabs.tsx` where periodic telemetry ticks re-rendered `tabs` and triggered native `Element.scrollIntoView()`, bubbling to the viewport and snapping the mobile page back to top. Replaced with container-scoped `wrapper.scrollTo({ left, behavior: 'smooth' })` tracking tab changes via `prevActiveTabRef`. Memoized `hvacMotionTabs` in `page.tsx` with `useMemo`.
+  - **Fluid Mobile Hamburger Drawer Transition**: Replaced abrupt conditional unmounting `{isOpen && ...}` with continuously mounted Tailwind CSS v4 hardware-accelerated drawer (`translate-x-0` vs `-translate-x-full`, `duration-300`, `ease-[cubic-bezier(0.16,1,0.3,1)]`) and smooth fading backdrop (`opacity-100` vs `opacity-0 pointer-events-none`) with body scroll locking.
+  - **Interactive Hamburger State**: Connected `isMobileSidebarOpen` state to `TopHeader.tsx` hamburger button with 90° rotation and active blue accent styling.
+  - **Production Verification**: Built with Turbopack (exit code 0), committed, and pushed to `origin main` on GitHub (commit `bc0654a`).

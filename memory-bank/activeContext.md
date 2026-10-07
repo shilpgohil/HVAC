@@ -17,14 +17,15 @@
 - **Safety Interlocks & Controls Preserved:** Two-step confirmation modal with slide-to-confirm, auto-timeout rollback, and supervisory operator authorization.
 - **Open Sans & Google Sans Typographic Standard:** Configured `Open_Sans` from `next/font/google` with fallback to `Google Sans` in `layout.tsx` and `globals.css`, paired with `JetBrains Mono` for tabular telemetry numbers (`tnum`, `zero`).
 - **Tactile Button Physics & Motion Transitions:** Implemented `.btn-press` (`active:scale-[0.96]`, subtle hover lift, cubic-bezier spring curves) across all switches, scenario dropdowns, mode buttons, batch controls, and authorization drawers.
-- **Mobile First-Class Responsive Alignment:**
-  - Header: Subtitle safely hidden on mobile to eliminate vertical wrapping and border collision; touch targets sized to 38px+.
+- **Mobile First-Class Responsive Alignment & Kinetic Polish:**
+  - Header: Subtitle safely hidden on mobile to eliminate vertical wrapping and border collision; touch targets sized to 38px+; animated hamburger icon with 90° rotation and active state.
   - Metric Cards: Replaced vertical stack with a balanced 2x2 bento grid (`grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4`) with compact padding (`p-3 sm:p-5`) and non-truncated titles.
-  - MotionTabs: Enabled horizontal smooth auto-scrolling to active tabs with scrollLeft position compensation for the floating pill indicator.
+  - MotionTabs: Eliminated `scrollIntoView()` ancestor bubble that caused page jumping to the top on mobile telemetry updates. Replaced with container-scoped horizontal `wrapper.scrollTo({ left, behavior: 'smooth' })` triggered strictly on tab id changes. Memoized `hvacMotionTabs` in `page.tsx`.
+  - Mobile Drawer Smooth Hardware Transitions: Replaced abrupt `{isOpen && ...}` conditional unmount with continuously mounted Tailwind v4 hardware-accelerated drawer (`translate-x-0` vs `-translate-x-full`, `duration-300`, `ease-[cubic-bezier(0.16,1,0.3,1)]`) and smooth fading backdrop (`opacity-100` vs `opacity-0 pointer-events-none`) with body scroll lock.
 - **Dedicated Hardware Icons (Zero Emojis):** Replaced unicode arrow glyphs with Lucide `ArrowRight` icon and hardware status badges.
 - **Strict No-Comments Invariant:** Authored code contains zero boilerplate, narrative, or explanatory comments.
 
 ## Validation Status
 - Next.js 16.3.6 Turbopack production build: Passed with 0 errors.
 - Visual inspection via browser subagent: Verified clean 390px mobile viewport and 1440px desktop viewport screenshots.
-- Git Repository Sync: Changes pushed to `origin main` on GitHub.
+- Git Repository Sync: Changes pushed to `origin main` on GitHub (commit `bc0654a`).
