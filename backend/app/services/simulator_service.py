@@ -650,6 +650,17 @@ class ThermodynamicSimulator:
             {"id": "act-3", "time": "12:14:10", "category": "solar", "room": "Rooftop Solar", "message": "Solar PV generation peaked at 8.4 kW (Exporting 2.8 kW)", "severity": "info"},
             {"id": "act-4", "time": "12:05:45", "category": "security", "room": "Whole Home", "message": "Perimeter security armed in Home Guard mode", "severity": "success"}
         ]
+        self.home_iot_active_scenario: str = "solar_surplus"
+        self.home_iot_scenarios: List[Dict[str, Any]] = [
+            {"id": "solar_surplus", "name": "Solar Surplus & EV Fast Charge", "description": "8.8 kW rooftop solar PV surplus channeled to Level 2 EV Wallbox and 15kWh LFP bank."},
+            {"id": "peak_shaving", "name": "Peak Tariff Shaving (Zero Grid)", "description": "Evening grid peak; 15kWh battery discharges 3.8 kW to power household loads with 0 kW grid import."},
+            {"id": "entertainment", "name": "Luxury Ambiance & Cinema", "description": "Living Room chandelier at 100%, ambient coves in violet, 4K media center active, mini-split at 21.5°C."},
+            {"id": "night_guard", "name": "Silent Sleep & Perimeter Guard", "description": "All primary lights off, soft bedside lamps at 20%, silent AC in whisper mode, perimeter security fully armed."},
+            {"id": "eco_netzero", "name": "Eco Saver & Smart Net-Zero", "description": "Thermostats relaxed to 24.5°C, motorized shades lowered 75% to deflect solar heat gain."},
+            {"id": "grid_outage", "name": "Grid Blackout Microgrid Island", "description": "Utility grid supply offline; 10kW hybrid inverter islands residence on solar PV & LFP battery reserves."},
+            {"id": "vacation_away", "name": "Vacation Away & Flood Watch", "description": "All non-essential circuits isolated, security armed away, water leak sensors active with main shutoff."},
+            {"id": "heatwave_max", "name": "Heatwave Emergency Pre-Cool", "description": "High ambient 38°C; all inverter AC units modulate to max cooling capacity to preserve indoor comfort."}
+        ]
 
     def get_home_iot_state(self) -> Dict[str, Any]:
         t = self.tick_count
@@ -694,7 +705,9 @@ class ThermodynamicSimulator:
             },
             "rooms": self.home_iot_rooms,
             "scenes": scenes,
-            "activities": self.home_iot_activities[:10]
+            "active_scenario": self.home_iot_active_scenario,
+            "scenarios": self.home_iot_scenarios,
+            "activities": self.home_iot_activities[:15]
         }
 
     def toggle_home_iot_device(self, room_id: str, device_id: str, target_state: Optional[bool] = None) -> Dict[str, Any]:
@@ -799,6 +812,141 @@ class ThermodynamicSimulator:
             "severity": "warning" if "ARMED" in mode else "info"
         })
         return {"success": True, "security_mode": mode}
+
+    def set_home_iot_device_level(self, room_id: str, device_id: str, level: int) -> Dict[str, Any]:
+        for room in self.home_iot_rooms:
+            if room["id"] == room_id:
+                for dev in room["devices"]:
+                    if dev["id"] == device_id:
+                        clamped = max(0, min(100, level))
+                        dev["level"] = clamped
+                        dev["state"] = clamped > 0
+                        if dev["type"] == "light":
+                            dev["power_w"] = round((clamped / 100.0) * 60.0, 1)
+                        elif dev["type"] == "cover":
+                            dev["power_w"] = 15 if clamped > 0 else 0
+                        elif dev["type"] == "climate":
+                            dev["power_w"] = round(300 + (clamped / 100.0) * 700, 1)
+                        now_str = datetime.now().strftime("%H:%M:%S")
+                        self.home_iot_activities.insert(0, {
+                            "id": f"act-{len(self.home_iot_activities) + 1}",
+                            "time": now_str,
+                            "category": dev["type"],
+                            "room": room["name"],
+                            "message": f"{dev['name']} adjusted to {clamped}%",
+                            "severity": "info"
+                        })
+                        return {"success": True, "device": dev, "room_id": room_id}
+        return {"success": False, "error": "Device not found"}
+
+    def set_home_iot_scenario(self, scenario_id: str) -> Dict[str, Any]:
+        now_str = datetime.now().strftime("%H:%M:%S")
+        self.home_iot_active_scenario = scenario_id
+        
+        if scenario_id == "solar_surplus":
+            self.home_iot_active_scene = "Home"
+            self.home_iot_security_mode = "DISARMED"
+            for r in self.home_iot_rooms:
+                if r["id"] == "ev_garage":
+                    for d in r["devices"]:
+                        if d["id"] == "gr_ev_wallbox":
+                            d["state"] = True
+                            d["power_w"] = 7200
+                elif r["id"] == "outdoor_solar":
+                    r["solar_pv_kw"] = 8.8
+                    r["battery_flow_kw"] = 2.4
+                    r["battery_soc_pct"] = 92
+        elif scenario_id == "peak_shaving":
+            self.home_iot_active_scene = "Home"
+            for r in self.home_iot_rooms:
+                if r["id"] == "outdoor_solar":
+                    r["solar_pv_kw"] = 0.5
+                    r["battery_flow_kw"] = -3.8
+                elif r["id"] == "ev_garage":
+                    for d in r["devices"]:
+                        if d["id"] == "gr_ev_wallbox":
+                            d["state"] = False
+                            d["power_w"] = 0
+        elif scenario_id == "entertainment":
+            self.home_iot_active_scene = "Entertain"
+            self.home_iot_security_mode = "DISARMED"
+            for r in self.home_iot_rooms:
+                if r["id"] == "living_room":
+                    r["temp_c"] = 21.8
+                    r["target_temp_c"] = 21.5
+                    for d in r["devices"]:
+                        d["state"] = True
+                        if d["id"] == "lr_chandelier":
+                            d["level"] = 100
+                            d["power_w"] = 75
+                        elif d["id"] == "lr_led_cove":
+                            d["level"] = 90
+                            d["power_w"] = 40
+        elif scenario_id == "night_guard":
+            self.home_iot_active_scene = "Night"
+            self.home_iot_security_mode = "ARMED_HOME"
+            for r in self.home_iot_rooms:
+                if r["id"] != "master_bedroom":
+                    for d in r["devices"]:
+                        if d["type"] == "light":
+                            d["state"] = False
+                            d["level"] = 0
+                            d["power_w"] = 0
+                else:
+                    r["target_temp_c"] = 22.0
+                    for d in r["devices"]:
+                        if d["id"] == "mbr_bedside_lamps":
+                            d["state"] = True
+                            d["level"] = 20
+                            d["power_w"] = 8
+        elif scenario_id == "eco_netzero":
+            self.home_iot_active_scene = "Eco"
+            for r in self.home_iot_rooms:
+                if "target_temp_c" in r:
+                    r["target_temp_c"] = 24.5
+                for d in r["devices"]:
+                    if d["type"] == "cover":
+                        d["level"] = 75
+        elif scenario_id == "grid_outage":
+            self.home_iot_active_scene = "Eco"
+            for r in self.home_iot_rooms:
+                if r["id"] == "ev_garage":
+                    for d in r["devices"]:
+                        if d["id"] == "gr_ev_wallbox":
+                            d["state"] = False
+                            d["power_w"] = 0
+                elif r["id"] == "outdoor_solar":
+                    r["battery_flow_kw"] = -1.8
+        elif scenario_id == "vacation_away":
+            self.home_iot_active_scene = "Away"
+            self.home_iot_security_mode = "ARMED_AWAY"
+            for r in self.home_iot_rooms:
+                for d in r["devices"]:
+                    if d["type"] == "light":
+                        d["state"] = False
+                        d["level"] = 0
+                        d["power_w"] = 0
+                    elif d["type"] == "climate":
+                        d["power_w"] = 150
+        elif scenario_id == "heatwave_max":
+            for r in self.home_iot_rooms:
+                if "target_temp_c" in r:
+                    r["target_temp_c"] = 20.5
+                for d in r["devices"]:
+                    if d["type"] == "climate":
+                        d["state"] = True
+                        d["power_w"] = 1100
+
+        sc_name = next((s["name"] for s in self.home_iot_scenarios if s["id"] == scenario_id), scenario_id)
+        self.home_iot_activities.insert(0, {
+            "id": f"act-{len(self.home_iot_activities) + 1}",
+            "time": now_str,
+            "category": "scenario",
+            "room": "Whole Home",
+            "message": f"Scenario deployed: {sc_name}",
+            "severity": "info"
+        })
+        return {"success": True, "scenario_id": scenario_id}
 
 
 simulator = ThermodynamicSimulator()

@@ -96,6 +96,16 @@ class HomeSecurityRequest(BaseModel):
     mode: str
 
 
+class HomeScenarioRequest(BaseModel):
+    scenario_id: str
+
+
+class HomeDeviceDimmerRequest(BaseModel):
+    room_id: str
+    device_id: str
+    level: int
+
+
 @router.post("/alarm/ack")
 async def ack_alarm(payload: AlarmAckRequest) -> Dict[str, Any]:
     success = simulator.acknowledge_alarm(payload.alarm_id, payload.user or "admin")
@@ -141,6 +151,16 @@ async def activate_home_scene(payload: HomeSceneRequest) -> Dict[str, Any]:
 @router.post("/home-iot/security")
 async def update_home_security(payload: HomeSecurityRequest) -> Dict[str, Any]:
     return simulator.set_home_iot_security_mode(payload.mode)
+
+
+@router.post("/home-iot/scenario")
+async def set_home_scenario(payload: HomeScenarioRequest) -> Dict[str, Any]:
+    return simulator.set_home_iot_scenario(payload.scenario_id)
+
+
+@router.post("/home-iot/dimmer")
+async def set_home_dimmer(payload: HomeDeviceDimmerRequest) -> Dict[str, Any]:
+    return simulator.set_home_iot_device_level(payload.room_id, payload.device_id, payload.level)
 
 
 @router.get("/state")

@@ -178,3 +178,23 @@ export async function updateHomeIotSecurityMode(mode: string): Promise<any> {
   return res.json();
 }
 
+export async function activateHomeIotScenario(scenarioId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/control/home-iot/scenario`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario_id: scenarioId })
+  });
+  if (!res.ok) throw new Error('Failed to activate scenario');
+  return res.json();
+}
+
+export async function setHomeIotDeviceLevel(roomId: string, deviceId: string, level: number): Promise<any> {
+  const res = await fetch(`${API_BASE}/control/home-iot/dimmer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_id: roomId, device_id: deviceId, level })
+  });
+  if (!res.ok) throw new Error('Failed to set device level');
+  return res.json();
+}
+

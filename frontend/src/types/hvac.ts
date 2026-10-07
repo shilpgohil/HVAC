@@ -184,5 +184,7 @@ export interface HomeIotState {
   };
   rooms: HomeIotRoom[];
   scenes: HomeIotScene[];
+  active_scenario?: string;
+  scenarios?: { id: string; name: string; description: string }[];
   activities: HomeIotActivity[];
 }

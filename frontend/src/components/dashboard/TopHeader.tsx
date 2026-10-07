@@ -159,29 +159,79 @@ export function TopHeader({
       </div>
 
       <div className="hidden lg:flex items-center gap-4 py-1.5 px-3.5 bg-slate-50 rounded-xl border border-slate-200/80 font-mono text-xs shadow-2xs">
-        <div className="flex items-center gap-1.5">
-          <Thermometer className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-slate-500">SAT:</span>
-          <span className="font-bold text-slate-900 tabular-nums">{supplyTemp.toFixed(1)}°C</span>
-        </div>
-        <div className="w-px h-3.5 bg-slate-200" />
-        <div className="flex items-center gap-1.5">
-          <Thermometer className="w-3.5 h-3.5 text-amber-600" />
-          <span className="text-slate-500">RAT:</span>
-          <span className="font-bold text-slate-900 tabular-nums">{returnTemp.toFixed(1)}°C</span>
-        </div>
-        <div className="w-px h-3.5 bg-slate-200" />
-        <div className="flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-emerald-600" />
-          <span className="text-slate-500">LOAD:</span>
-          <span className="font-bold text-slate-900 tabular-nums">{totalPower.toFixed(1)} kW</span>
-        </div>
-        <div className="w-px h-3.5 bg-slate-200" />
-        <div className="flex items-center gap-1.5">
-          <Wind className="w-3.5 h-3.5 text-indigo-600" />
-          <span className="text-slate-500">DP:</span>
-          <span className="font-bold text-slate-900 tabular-nums">{ductPressure.toFixed(0)} Pa</span>
-        </div>
+        {activeSystem === 'home_iot' ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-slate-500">SOLAR:</span>
+              <span className="font-bold text-emerald-700 tabular-nums">+8.4 kW</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-slate-500">BATTERY:</span>
+              <span className="font-bold text-slate-900 tabular-nums">91% (13.6 kWh)</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Thermometer className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-slate-500">AVG TEMP:</span>
+              <span className="font-bold text-slate-900 tabular-nums">23.2°C</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Wind className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-slate-500">IAQ:</span>
+              <span className="font-bold text-emerald-700 tabular-nums">EXCELLENT</span>
+            </div>
+          </>
+        ) : activeSystem === 'electrical' ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-slate-500">SUBSTATION:</span>
+              <span className="font-bold text-slate-900 tabular-nums">11 kV / 415 V</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-slate-500">POWER FACTOR:</span>
+              <span className="font-bold text-emerald-700 tabular-nums">0.96 LAG</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Thermometer className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-slate-500">XFMR TEMP:</span>
+              <span className="font-bold text-slate-900 tabular-nums">54.2°C</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5">
+              <Thermometer className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-slate-500">SAT:</span>
+              <span className="font-bold text-slate-900 tabular-nums">{supplyTemp.toFixed(1)}°C</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Thermometer className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-slate-500">RAT:</span>
+              <span className="font-bold text-slate-900 tabular-nums">{returnTemp.toFixed(1)}°C</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-slate-500">LOAD:</span>
+              <span className="font-bold text-slate-900 tabular-nums">{totalPower.toFixed(1)} kW</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-200" />
+            <div className="flex items-center gap-1.5">
+              <Wind className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-slate-500">DP:</span>
+              <span className="font-bold text-slate-900 tabular-nums">{ductPressure.toFixed(0)} Pa</span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-2 md:gap-3.5">
