@@ -25,6 +25,7 @@ interface TopHeaderProps {
   onSelectSystem: (mode: SystemMode) => void;
   alarmCount?: number;
   onToggleMobileSidebar?: () => void;
+  isMobileSidebarOpen?: boolean;
   systemState?: SystemState | null;
   wsConnected?: boolean;
 }
@@ -34,6 +35,7 @@ export function TopHeader({
   onSelectSystem, 
   alarmCount = 0,
   onToggleMobileSidebar,
+  isMobileSidebarOpen = false,
   systemState,
   wsConnected = true
 }: TopHeaderProps) {
@@ -108,10 +110,15 @@ export function TopHeader({
         {onToggleMobileSidebar && (
           <button
             onClick={onToggleMobileSidebar}
-            className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 border border-slate-200 text-slate-700 transition-all flex items-center justify-center cursor-pointer min-w-[38px] min-h-[38px]"
+            className={`md:hidden p-2 rounded-xl border transition-all duration-200 flex items-center justify-center cursor-pointer min-w-[38px] min-h-[38px] active:scale-95 ${
+              isMobileSidebarOpen
+                ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-2xs'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+            }`}
             aria-label="Toggle navigation drawer"
+            aria-expanded={isMobileSidebarOpen}
           >
-            <Menu className="w-4.5 h-4.5 text-slate-700" />
+            <Menu className={`w-4.5 h-4.5 transition-transform duration-250 ease-out ${isMobileSidebarOpen ? 'rotate-90 text-blue-600' : 'text-slate-700'}`} />
           </button>
         )}
 

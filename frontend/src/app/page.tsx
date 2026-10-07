@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Fan, 
@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   const activeAlarmCount = systemState?.alarms?.filter(a => a.state !== 'CLEARED').length ?? 0;
 
-  const hvacMotionTabs: MotionTabItem[] = [
+  const hvacMotionTabs: MotionTabItem[] = useMemo(() => [
     { 
       id: 'dashboard', 
       label: 'Overview', 
@@ -125,7 +125,7 @@ export default function DashboardPage() {
       category: 'Configuration', 
       description: 'Engineering thresholds, Modbus gateway configuration & PID tuning parameters' 
     },
-  ];
+  ], [activeAlarmCount]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans antialiased relative selection:bg-blue-600 selection:text-white">
@@ -153,6 +153,7 @@ export default function DashboardPage() {
           onSelectSystem={handleSystemSelect}
           alarmCount={activeAlarmCount}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
+          isMobileSidebarOpen={isMobileSidebarOpen}
           systemState={systemState}
           wsConnected={wsConnected}
         />

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Fan, 
@@ -54,6 +54,17 @@ export function Sidebar({
     }
     if (onClose) onClose();
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleSystemChange = (sys: SystemMode) => {
     onSelectSystem(sys);
@@ -169,19 +180,24 @@ export function Sidebar({
         {sidebarContent}
       </aside>
 
-      {isOpen && (
+      <div 
+        className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isOpen
+            ? 'bg-slate-900/40 backdrop-blur-xs opacity-100 pointer-events-auto'
+            : 'bg-transparent backdrop-blur-none opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+        aria-hidden={!isOpen}
+      >
         <div 
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 md:hidden animate-in fade-in duration-200"
-          onClick={onClose}
+          className={`w-72 max-w-[85vw] bg-white border-r border-slate-200 h-full p-0 flex flex-col shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div 
-            className="w-72 bg-white border-r border-slate-200 h-full p-0 flex flex-col shadow-2xl animate-in slide-in-from-left duration-250 ease-out"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {sidebarContent}
-          </div>
+          {sidebarContent}
         </div>
-      )}
+      </div>
     </>
   );
 }

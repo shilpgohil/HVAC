@@ -30,6 +30,9 @@ export function MotionTabs({
   showStagedHeader = true,
 }: MotionTabsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollWrapperRef = useRef<HTMLDivElement>(null);
+  const prevActiveTabRef = useRef<string | null>(null);
+
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number; opacity: number }>({
     left: 0,
     width: 0,
@@ -54,12 +57,27 @@ export function MotionTabs({
 
   useEffect(() => {
     updateIndicator();
-    if (!containerRef.current) return;
-    const activeElement = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`);
-    if (activeElement) {
-      activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+    if (prevActiveTabRef.current !== activeTab) {
+      prevActiveTabRef.current = activeTab;
+      if (scrollWrapperRef.current && containerRef.current) {
+        const activeElement = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`);
+        if (activeElement) {
+          const wrapper = scrollWrapperRef.current;
+          const targetLeft = activeElement.offsetLeft - (wrapper.clientWidth - activeElement.clientWidth) / 2;
+          wrapper.scrollTo({
+            left: Math.max(0, targetLeft),
+            behavior: 'smooth'
+          });
+        }
+      }
     }
-  }, [activeTab, tabs]);
+  }, [activeTab]);
+
+  useEffect(() => {
+    window.addEventListener('resize', updateIndicator);
+    return () => window.removeEventListener('resize', updateIndicator);
+  }, [activeTab]);
 
   return (
     <div className="space-y-3">
@@ -83,6 +101,7 @@ export function MotionTabs({
       )}
 
       <div 
+        ref={scrollWrapperRef}
         className="p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shadow-2xs relative overflow-x-auto select-none"
         onScroll={updateIndicator}
       >
